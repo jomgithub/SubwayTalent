@@ -1,7 +1,0 @@
-C:\Projects\SubwayTalent\SubwayTalent.Data\bin\Release\SubwayTalent.Data.dll
-C:\Projects\SubwayTalent\SubwayTalent.Data\bin\Release\SubwayTalent.Data.pdb
-C:\Projects\SubwayTalent\SubwayTalent.Data\bin\Release\SubwayTalent.Contracts.dll
-C:\Projects\SubwayTalent\SubwayTalent.Data\bin\Release\SubwayTalent.Contracts.pdb
-C:\Projects\SubwayTalent\SubwayTalent.Data\obj\Release\SubwayTalent.Data.csprojResolveAssemblyReference.cache
-C:\Projects\SubwayTalent\SubwayTalent.Data\obj\Release\SubwayTalent.Data.dll
-C:\Projects\SubwayTalent\SubwayTalent.Data\obj\Release\SubwayTalent.Data.pdb
