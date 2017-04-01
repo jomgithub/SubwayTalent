@@ -9,7 +9,7 @@ using System.Device.Location;
 using SubwayTalent.Contracts;
 using System.Linq;
 using SubwayTalent.Core;
-using SubwayTalent.Core.Interfaces;
+using SubwayTalent.Core.Interfaces;    
 using System.Configuration;
 using System.Text;
 
