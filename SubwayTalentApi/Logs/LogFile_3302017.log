@@ -1,0 +1,30 @@
+[10:47:00 PM] -----------------------------------------------
+Data too long for column 'file_type' at row 1.    at MySql.Data.MySqlClient.MySqlStream.ReadPacket()
+   at MySql.Data.MySqlClient.NativeDriver.GetResult(Int32& affectedRow, Int64& insertedId)
+   at MySql.Data.MySqlClient.Driver.GetResult(Int32 statementId, Int32& affectedRows, Int64& insertedId)
+   at MySql.Data.MySqlClient.Driver.NextResult(Int32 statementId, Boolean force)
+   at MySql.Data.MySqlClient.MySqlDataReader.NextResult()
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteReader(CommandBehavior behavior)
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteNonQuery()
+   at SubwayTalent.Data.UserAccountRepo.AddFile(String userId, String fileType, String filePath, String fileName, String thumbPath) in c:\Projects\SubwayTalent\SubwayTalent.Data\UserAccountRepo.cs:line 324
+   at SubwayTalentApi.Controllers.AccountsController.AddUserFiles(IEnumerable`1 fileInfo, String userId, String perspective) in c:\Projects\SubwayTalent\SubwayTalentApi\Controllers\AccountsController.cs:line 937
+   at SubwayTalentApi.Controllers.AccountsController.<>c__DisplayClass16.<UpdateUserMultiPart>b__11(Task`1 t) in c:\Projects\SubwayTalent\SubwayTalentApi\Controllers\AccountsController.cs:line 299
+
+------------------------------------------------------------
+[10:51:59 PM] -----------------------------------------------
+Data too long for column 'file_type' at row 1.    at MySql.Data.MySqlClient.MySqlStream.ReadPacket()
+   at MySql.Data.MySqlClient.NativeDriver.GetResult(Int32& affectedRow, Int64& insertedId)
+   at MySql.Data.MySqlClient.Driver.GetResult(Int32 statementId, Int32& affectedRows, Int64& insertedId)
+   at MySql.Data.MySqlClient.Driver.NextResult(Int32 statementId, Boolean force)
+   at MySql.Data.MySqlClient.MySqlDataReader.NextResult()
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteReader(CommandBehavior behavior)
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteNonQuery()
+   at SubwayTalent.Data.UserAccountRepo.AddFile(String userId, String fileType, String filePath, String fileName, String thumbPath) in c:\Projects\SubwayTalent\SubwayTalent.Data\UserAccountRepo.cs:line 324
+   at SubwayTalentApi.Controllers.AccountsController.AddUserFiles(IEnumerable`1 fileInfo, String userId, String perspective) in c:\Projects\SubwayTalent\SubwayTalentApi\Controllers\AccountsController.cs:line 937
+   at SubwayTalentApi.Controllers.AccountsController.<>c__DisplayClass16.<UpdateUserMultiPart>b__11(Task`1 t) in c:\Projects\SubwayTalent\SubwayTalentApi\Controllers\AccountsController.cs:line 299
+
+------------------------------------------------------------
+[11:57:12 PM] -----------------------------------------------
+Invalid perspective..    at SubwayTalentApi.Controllers.AccountsController.SetProfilePic(SetProfilePicModel file) in c:\Projects\SubwayTalent\SubwayTalentApi\Controllers\AccountsController.cs:line 567
+
+------------------------------------------------------------

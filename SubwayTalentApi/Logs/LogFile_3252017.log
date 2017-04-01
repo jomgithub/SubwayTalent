@@ -1,0 +1,92 @@
+[6:33:43 AM] -----------------------------------------------
+Event doesn't exists..    at SubwayTalentApi.Controllers.EventsController.AcceptRejectRequestTalentInvite(AcceptRejectModel model) in c:\Projects\SubwayTalent\SubwayTalentApi\Controllers\EventsController.cs:line 409
+
+------------------------------------------------------------
+[6:33:49 AM] -----------------------------------------------
+Event doesn't exists..    at SubwayTalentApi.Controllers.EventsController.AcceptRejectRequestTalentInvite(AcceptRejectModel model) in c:\Projects\SubwayTalent\SubwayTalentApi\Controllers\EventsController.cs:line 409
+
+------------------------------------------------------------
+[6:33:53 AM] -----------------------------------------------
+The userId is not a talent to the event..    at SubwayTalentApi.Controllers.EventsController.AcceptRejectRequestTalentInvite(Event eventObj, InviteStatus status, String userId, String updatedBy) in c:\Projects\SubwayTalent\SubwayTalentApi\Controllers\EventsController.cs:line 326
+   at SubwayTalentApi.Controllers.EventsController.AcceptRejectRequestTalentInvite(AcceptRejectModel model) in c:\Projects\SubwayTalent\SubwayTalentApi\Controllers\EventsController.cs:line 411
+
+------------------------------------------------------------
+[6:34:26 AM] -----------------------------------------------
+The userId is not a talent to the event..    at SubwayTalentApi.Controllers.EventsController.AcceptRejectRequestTalentInvite(Event eventObj, InviteStatus status, String userId, String updatedBy) in c:\Projects\SubwayTalent\SubwayTalentApi\Controllers\EventsController.cs:line 349
+   at SubwayTalentApi.Controllers.EventsController.AcceptRejectRequestTalentInvite(AcceptRejectModel model) in c:\Projects\SubwayTalent\SubwayTalentApi\Controllers\EventsController.cs:line 411
+
+------------------------------------------------------------
+[6:34:33 AM] -----------------------------------------------
+Event doesn't exists..    at SubwayTalentApi.Controllers.EventsController.AcceptRejectRequestTalentInvite(AcceptRejectModel model) in c:\Projects\SubwayTalent\SubwayTalentApi\Controllers\EventsController.cs:line 409
+
+------------------------------------------------------------
+[6:34:40 AM] -----------------------------------------------
+<FakeEmail>
+
+------------------------------------------------------------
+[6:34:40 AM] -----------------------------------------------
+Body:, From"Subway Talent Notification" <notification@subwaytalent.com>,HTMLBody:<html>
+<head>
+    <title></title>
+    <style type="text/css">
+        .auto-style1 {
+            font-family: Arial, Helvetica, sans-serif;
+        }
+    </style>
+</head>
+<body>
+
+    <p>&nbsp;</p>
+    <p class="auto-style1">Hi Hux Alcain,</p>
+    <p style="font-family: Arial, Helvetica, sans-serif">Jerome Corpuz has declined your invitation to "Weddding of the century" event this coming "12/3/2018 9:00 AM".</p>
+    <p style="font-family: Arial, Helvetica, sans-serif">&nbsp;</p>
+
+</body>
+</html>
+,Subject:Talent declined to perform, To:jeromecorpuz84@gmail.com, Cc: jeromecorpuz84@gmail.com
+
+------------------------------------------------------------
+[6:34:40 AM] -----------------------------------------------
+</FakeEmail>
+
+------------------------------------------------------------
+[6:34:40 AM] -----------------------------------------------
+<FakeAPN>
+
+------------------------------------------------------------
+[6:34:40 AM] -----------------------------------------------
+alertMessage:You've been Rejected by Jerome Corpuz, badge:2, device:Apple, deviceToken:8055466310FE6B2369F55E1E203038B67FD23552E412D69233F62FD5F3FAE38D 
+
+------------------------------------------------------------
+[6:34:40 AM] -----------------------------------------------
+Key:status, value:Rejected
+
+------------------------------------------------------------
+[6:34:40 AM] -----------------------------------------------
+Key:eventId, value:43
+
+------------------------------------------------------------
+[6:34:40 AM] -----------------------------------------------
+Key:talentName, value:Jerome Corpuz
+
+------------------------------------------------------------
+[6:34:40 AM] -----------------------------------------------
+Key:plannerName, value:Hux Alcain
+
+------------------------------------------------------------
+[6:34:40 AM] -----------------------------------------------
+Key:eventName, value:Weddding of the century
+
+------------------------------------------------------------
+[6:34:40 AM] -----------------------------------------------
+Key:talentId, value:newUser1
+
+------------------------------------------------------------
+[6:34:40 AM] -----------------------------------------------
+Key:plannerId, value:Planner1
+
+------------------------------------------------------------
+[6:34:40 AM] -----------------------------------------------
+</FakeAPN>
+
+------------------------------------------------------------

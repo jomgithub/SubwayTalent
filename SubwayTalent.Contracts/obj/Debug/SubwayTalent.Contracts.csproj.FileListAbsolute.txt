@@ -1,0 +1,5 @@
+C:\Projects\SubwayTalent\SubwayTalent.Contracts\bin\Debug\SubwayTalent.Contracts.dll
+C:\Projects\SubwayTalent\SubwayTalent.Contracts\bin\Debug\SubwayTalent.Contracts.pdb
+C:\Projects\SubwayTalent\SubwayTalent.Contracts\obj\Debug\SubwayTalent.Contracts.dll
+C:\Projects\SubwayTalent\SubwayTalent.Contracts\obj\Debug\SubwayTalent.Contracts.pdb
+C:\Projects\SubwayTalent\SubwayTalent.Contracts\obj\Debug\SubwayTalent.Contracts.csprojResolveAssemblyReference.cache

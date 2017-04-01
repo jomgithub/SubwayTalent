@@ -1,0 +1,11 @@
+C:\Projects\SubwayTalent\SubwayTalent.Core\bin\Release\SubwayTalent.Core.dll
+C:\Projects\SubwayTalent\SubwayTalent.Core\bin\Release\SubwayTalent.Core.pdb
+C:\Projects\SubwayTalent\SubwayTalent.Core\obj\Release\SubwayTalent.Core.dll
+C:\Projects\SubwayTalent\SubwayTalent.Core\obj\Release\SubwayTalent.Core.pdb
+C:\Projects\SubwayTalent\SubwayTalent.Core\bin\Release\System.Net.Http.Formatting.dll
+C:\Projects\SubwayTalent\SubwayTalent.Core\bin\Release\System.Net.Http.Formatting.xml
+C:\Projects\SubwayTalent\SubwayTalent.Core\obj\Release\SubwayTalent.Core.csprojResolveAssemblyReference.cache
+C:\Projects\SubwayTalent\SubwayTalent.Core\bin\Release\MoonAPNS.dll
+C:\Projects\SubwayTalent\SubwayTalent.Core\bin\Release\Newtonsoft.Json.dll
+C:\Projects\SubwayTalent\SubwayTalent.Core\bin\Release\NLog.dll
+C:\Projects\SubwayTalent\SubwayTalent.Core\bin\Release\Newtonsoft.Json.xml

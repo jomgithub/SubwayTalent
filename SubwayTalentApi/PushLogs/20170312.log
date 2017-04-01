@@ -1,0 +1,19 @@
+20170312 2313 - Info - Payload queue received.
+20170312 2313 - Info - Connecting to apple server.
+20170312 2313 - Info - Creating SSL connection.
+20170312 2313 - Error - A call to SSPI failed, see inner exception.
+20170312 2334 - Info - Payload queue received.
+20170312 2334 - Info - Connecting to apple server.
+20170312 2334 - Info - Creating SSL connection.
+20170312 2334 - Error - A call to SSPI failed, see inner exception.
+20170312 2336 - Info - Payload queue received.
+20170312 2336 - Info - Connecting to apple server.
+20170312 2336 - Info - Creating SSL connection.
+20170312 2336 - Error - A call to SSPI failed, see inner exception.
+20170312 2338 - Info - Payload queue received.
+20170312 2338 - Info - Connecting to apple server.
+20170312 2338 - Info - Creating SSL connection.
+20170312 2338 - Info - Conected.
+20170312 2338 - Info - Payload generated for 8055466310FE6B2369F55E1E203038B67FD23552E412D69233F62FD5F3FAE38D : {"aps":{"alert":"You've been Accepted by Hux Alcain","badge":1,"sound":"default"},"status":"Accepted","eventId":43,"talentName":"Jerome Corpuz","plannerName":"Hux Alcain","eventName":"Weddding of the century","talentId":"newUser1","plannerId":"Planner1"}
+20170312 2338 - Info - Notification successfully sent to APNS server for Device Toekn : 8055466310FE6B2369F55E1E203038B67FD23552E412D69233F62FD5F3FAE38D
+20170312 2338 - Info - Disconnected.

@@ -1,0 +1,13 @@
+C:\Projects\SubwayTalent\SubwayTalent.Logging\bin\Release\SubwayTalent.Logging.dll
+C:\Projects\SubwayTalent\SubwayTalent.Logging\bin\Release\SubwayTalent.Logging.pdb
+C:\Projects\SubwayTalent\SubwayTalent.Logging\obj\Release\SubwayTalent.Logging.dll
+C:\Projects\SubwayTalent\SubwayTalent.Logging\obj\Release\SubwayTalent.Logging.pdb
+C:\Projects\SubwayTalent\SubwayTalent.Logging\bin\Release\SubwayTalent.Core.dll
+C:\Projects\SubwayTalent\SubwayTalent.Logging\bin\Release\System.Net.Http.Formatting.dll
+C:\Projects\SubwayTalent\SubwayTalent.Logging\bin\Release\SubwayTalent.Core.pdb
+C:\Projects\SubwayTalent\SubwayTalent.Logging\bin\Release\System.Net.Http.Formatting.xml
+C:\Projects\SubwayTalent\SubwayTalent.Logging\obj\Release\SubwayTalent.Logging.csprojResolveAssemblyReference.cache
+C:\Projects\SubwayTalent\SubwayTalent.Logging\bin\Release\MoonAPNS.dll
+C:\Projects\SubwayTalent\SubwayTalent.Logging\bin\Release\Newtonsoft.Json.dll
+C:\Projects\SubwayTalent\SubwayTalent.Logging\bin\Release\NLog.dll
+C:\Projects\SubwayTalent\SubwayTalent.Logging\bin\Release\Newtonsoft.Json.xml
