@@ -2,6 +2,7 @@
 using SubwayTalent.Contracts.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,7 +11,7 @@ namespace SubwayTalent.Data.Interfaces
 {
     public interface IUserAccount
     {
-        UserAccount GetUserDetails(string userId);
+        UserAccount GetUserDetails(string userId, DbConnection connection = null);
 
         void AddUser(UserAccount user);
 
@@ -64,5 +65,13 @@ namespace SubwayTalent.Data.Interfaces
 
         void UpdatePassword(string userId, string password);
         void AddHelp(string userId, string senderName, string senderEmail, string subject, string message);
+
+        List<Payment> GetPaymentMethods(string userId, bool viewing);
+        
+        void AddPaymentMethod(string userId, string refreshToken, string paymentInstrumentId, Int16 paymentMethodId, string maskedCardNo, string cardType);
+
+        List<Event> GetTalentPendingPayments(string userId);
+        List<Event> GetPlannerPendingPayments(string userId);
+
     }
 }

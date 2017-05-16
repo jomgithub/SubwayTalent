@@ -1,4 +1,5 @@
 ﻿using SubwayTalent.Contracts;
+using SubwayTalent.Core.Exceptions;
 using SubwayTalentApi.Facebook;
 using SubwayTalentApi.Models;
 using System;
@@ -25,12 +26,12 @@ namespace SubwayTalentApi.Helpers
                 var result = ValidateLogin(userDetails);
 
                 if (result.Count > 0)
-                    throw new Exception(string.Join(" ", result.ToArray()));
+                    throw new SubwayTalentException(string.Join(" ", result.ToArray()));
 
                 var DtoUserDetails = SubwayContext.Current.UserRepo.LoginUser(userDetails.UserId, userDetails.Password);
 
                 if (DtoUserDetails == null)
-                    throw new Exception("user not found");
+                    throw new SubwayTalentException("user not found");
                 userDetails.Birthday = DtoUserDetails.Birthday;
                 userDetails.Email = DtoUserDetails.Email;
                 userDetails.FacebookUser = DtoUserDetails.FacebookUser;
@@ -48,9 +49,7 @@ namespace SubwayTalentApi.Helpers
                 user.Device = userDetails.Device;
                 user.DeviceToken = userDetails.DeviceToken;
                 return user;
-            }
-
-            
+            }            
         }
 
         public static UserModel Authenticate(UserModel userDetails)
@@ -61,12 +60,12 @@ namespace SubwayTalentApi.Helpers
                 var result = ValidateLogin(userDetails);
 
                 if (result.Count > 0)
-                    throw new Exception(string.Join(" ", result.ToArray()));
+                    throw new SubwayTalentException(string.Join(" ", result.ToArray()));
 
                 var DtoUserDetails = SubwayContext.Current.UserRepo.LoginUser(userDetails.UserId, userDetails.Password);
 
                 if (DtoUserDetails == null)
-                    throw new Exception("user not found");
+                    throw new SubwayTalentException("user not found");
 
                 if (userDetails.Device != 0 && !string.IsNullOrWhiteSpace(userDetails.DeviceToken))
                     SubwayContext.Current.UserRepo.AddDeviceID(userDetails.UserId, userDetails.DeviceToken, userDetails.Device);
@@ -123,6 +122,7 @@ namespace SubwayTalentApi.Helpers
 
             if (userobj == null)
             {
+                               
                 var DtoUserDetails = new UserAccount
                 {
                     Birthday = userDetails.Birthday,

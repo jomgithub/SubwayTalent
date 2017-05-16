@@ -1,5 +1,10 @@
-﻿using SubwayTalent.Contracts;
+﻿using Newtonsoft.Json;
+using SubwayTalent.Contracts;
+using SubwayTalent.Contracts.Entities;
+using SubwayTalent.Contracts.Interfaces;
 using SubwayTalent.Core;
+using SubwayTalent.Core.Exceptions;
+using SubwayTalent.Core.Interfaces;
 using SubwayTalent.Core.Utilities;
 using SubwayTalentApi.ActionFilters;
 using SubwayTalentApi.Facebook;
@@ -22,7 +27,7 @@ using System.Web.Http.Description;
 
 namespace SubwayTalentApi.Controllers
 {
-    
+
     public class AccountsController : SubwayBaseController
     {
 
@@ -39,36 +44,20 @@ namespace SubwayTalentApi.Controllers
         /// }
         /// </param>
         /// <returns>the return</returns> 
-        [ApiAuthenticationFilter]
+
         [HttpPost]
         public IHttpActionResult Login(UserModel userDetails)
         {
-            try
+            var result = LoginHelper.Authenticate(userDetails);
+            if (result == null)
+                throw new SubwayTalentException("failed to login.");
+
+            return Ok(new ResponseModel
             {
+                Status = Status.Success,
+                Data = result
+            });
 
-                var result = LoginHelper.Authenticate(userDetails);
-                if (result == null)
-                    throw new Exception("failed to login.");
-                
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Success,
-                    Data = result
-                });
-
-            }
-            catch (Exception ex)
-            {
-                var exceptionMessage = (ex.InnerException == null) ? ex.Message : ex.Message + ". " + ex.InnerException.Message;
-                exceptionMessage += ". " + ex.StackTrace;
-
-                SubwayContext.Current.Logger.Log(exceptionMessage);
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Failed,
-                    ErrorMessage = ex.Message
-                });
-            }
         }
 
         /// <summary>
@@ -90,89 +79,49 @@ namespace SubwayTalentApi.Controllers
         [HttpPost]
         public IHttpActionResult AddUser(UserModel userDetails)
         {
-            try
+            var errors = ValidateNewUser(userDetails);
+
+            if (errors.Count > 0)
+                throw new SubwayTalentException(string.Join(" ", errors.ToArray()));
+
+
+            var existingUser = SubwayContext.Current.UserRepo.GetUserDetails(userDetails.UserId);
+            if (existingUser != null)
+                throw new SubwayTalentException("User already exists.");
+
+            SubwayContext.Current.UserRepo.AddUser(new UserAccount
             {
-                var errors = ValidateNewUser(userDetails);
+                Birthday = userDetails.Birthday,
+                Email = userDetails.Email,
+                FirstName = userDetails.FirstName,
+                LastName = userDetails.LastName,
+                Password = userDetails.Password,
+                UserId = userDetails.UserId
+            });
 
-                if (errors.Count > 0)
-                    return Ok(new ResponseModel
-                    {
-                        Status = Status.Failed,
-                        ErrorMessage = string.Join(" ", errors.ToArray())
-                    });
-
-
-                var existingUser = SubwayContext.Current.UserRepo.GetUserDetails(userDetails.UserId);
-                if (existingUser != null)
-                    return Ok(new ResponseModel
-                    {
-                        Status = Status.Failed,
-                        ErrorMessage = "user already exists."
-                    });
-
-                SubwayContext.Current.UserRepo.AddUser(new UserAccount
-                {
-                    Birthday = userDetails.Birthday,
-                    Email = userDetails.Email,
-                    FirstName = userDetails.FirstName,
-                    LastName = userDetails.LastName,
-                    Password = userDetails.Password,
-                    UserId = userDetails.UserId
-                });
-
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Success
-                });
-
-            }
-            catch (Exception ex)
+            return Ok(new ResponseModel
             {
-                var exceptionMessage = (ex.InnerException == null) ? ex.Message : ex.Message + ". " + ex.InnerException.Message;
-                exceptionMessage += ". " + ex.StackTrace;
+                Status = Status.Success
+            });
 
-                SubwayContext.Current.Logger.Log(exceptionMessage);
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Failed,
-                    ErrorMessage = exceptionMessage
-                });
-            }
         }
 
         [HttpPost]
         public IHttpActionResult GetUserDetails(UserModel userDetails)
         {
-            try
+            if (userDetails == null || string.IsNullOrWhiteSpace(userDetails.UserId))
+                throw new SubwayTalentException("Invalid Parameter. No UserId.");
+
+            var result = Helpers.ConvertSubwayObject.ConvertToUserModel(SubwayContext.Current.UserRepo.GetUserDetails(userDetails.UserId));
+
+
+            return Ok(new ResponseModel
             {
-
-                if (userDetails == null || string.IsNullOrWhiteSpace(userDetails.UserId))
-                    throw new Exception("Invalid Parameter. No UserId.");
-
-                var result = SubwayContext.Current.UserRepo.GetUserDetails(userDetails.UserId);
-
-
-                return Ok(new ResponseModel
-                {
-                    Status = (result == null) ? Status.Failed : Status.Success,
-                    Data = result,
-                    ErrorMessage = (result == null) ? "User not found." : null,
-                    RecordCount = (result == null) ? 0 : 1
-                });
-
-            }
-            catch (Exception ex)
-            {
-                var exceptionMessage = (ex.InnerException == null) ? ex.Message : ex.Message + ". " + ex.InnerException.Message;
-                exceptionMessage += ". " + ex.StackTrace;
-
-                SubwayContext.Current.Logger.Log(exceptionMessage);
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Failed,
-                    ErrorMessage = ex.Message
-                });
-            }
+                Status = (result == null) ? Status.Failed : Status.Success,
+                Data = result,
+                ErrorMessage = (result == null) ? "User not found." : null,
+                RecordCount = (result == null) ? 0 : 1
+            });
         }
 
         /// <summary>
@@ -188,59 +137,34 @@ namespace SubwayTalentApi.Controllers
         [HttpPost]
         public IHttpActionResult GetAllTalents(UserAccount userDetails)
         {
-            try
+            if (userDetails == null || string.IsNullOrWhiteSpace(userDetails.UserId))
+                throw new SubwayTalentException("Invalid Parameter. No UserId.");
+
+            List<UserAccount> result = SubwayContext.Current.UserRepo.GetAllUsers(userDetails.UserId);
+
+            return Ok(new ResponseModel
             {
-                if (userDetails == null || string.IsNullOrWhiteSpace(userDetails.UserId))
-                    throw new Exception("Invalid Parameter. No UserId.");
+                Status = Status.Success,
+                Data = result,
+                RecordCount = (result == null) ? 0 : result.Count
+            });
 
-                List<UserAccount> result = SubwayContext.Current.UserRepo.GetAllUsers(userDetails.UserId);
-
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Success,
-                    Data = result,
-                    RecordCount = (result == null) ? 0 : result.Count
-                });
-            }
-            catch (Exception ex)
-            {
-                var exceptionMessage = (ex.InnerException == null) ? ex.Message : ex.Message + ". " + ex.InnerException.Message;
-                exceptionMessage += ". " + ex.StackTrace;
-
-                SubwayContext.Current.Logger.Log(exceptionMessage);
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Failed,
-                    ErrorMessage = ex.Message
-                });
-            }
         }
 
         [AuthorizationRequired]
         [HttpPost]
         public IHttpActionResult UpdateUser(UserModel user)
         {
-            try
-            {
-                SubwayContext.Current.UserRepo.UpdateUser(ConvertSubwayObject.ConvertToUserAccount(user));
+            if (user == null)
+                throw new SubwayTalentException("Invalid Parameters.");
 
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Success
-                });
-            }
-            catch (Exception ex)
-            {
-                var exceptionMessage = (ex.InnerException == null) ? ex.Message : ex.Message + ". " + ex.InnerException.Message;
-                exceptionMessage += ". " + ex.StackTrace;
+            SubwayContext.Current.UserRepo.UpdateUser(ConvertSubwayObject.ConvertToUserAccount(user));
 
-                SubwayContext.Current.Logger.Log(exceptionMessage);
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Failed,
-                    ErrorMessage = exceptionMessage
-                });
-            }
+            return Ok(new ResponseModel
+            {
+                Status = Status.Success
+            });
+
         }
         [AuthorizationRequired]
         [HttpPost]
@@ -265,6 +189,7 @@ namespace SubwayTalentApi.Controllers
             var userId = Request.Headers.GetValues("UserId").FirstOrDefault();
             var folderName = string.Format("{0}/{1}", ConfigurationManager.AppSettings["Uploads"], userId);
             var PATH = HttpContext.Current.Server.MapPath(string.Format("{0}{1}", "~/", folderName));
+            var environment = ConfigurationManager.AppSettings["Environment"];
             var rootUrl = Request.RequestUri.AbsoluteUri.Replace(Request.RequestUri.AbsolutePath, String.Empty);
             if (!Directory.Exists(PATH))
                 Directory.CreateDirectory(PATH);
@@ -288,15 +213,18 @@ namespace SubwayTalentApi.Controllers
                             //fileType = "F";
 
                             var info = new FileInfo(i.LocalFileName);
-                            return new FileDesc(info.Name, rootUrl + "/" + folderName + "/" + info.Name, info.Length / 1024,
-                                i.Headers.ContentType.MediaType, fileType);
-                        });                     
+                            var filePath = rootUrl + "/" + (string.IsNullOrWhiteSpace(environment) ? string.Empty : environment + "/")
+                                           + folderName + "/" + info.Name;
 
-                        
+                            return new FileDesc(info.Name, filePath, info.Length / 1024,
+                                i.Headers.ContentType.MediaType, fileType);
+                        });
+
+
                         var userModel = SaveUserDetails(userId, streamProvider, (fileInfo.Count() > 0) ? fileInfo.First().Path : string.Empty, PATH);
-                                               
-                         
-                        AddUserFiles(fileInfo, userId,userModel.Perspective);
+
+
+                        AddUserFiles(fileInfo, userId, userModel.Perspective);
 
                         return new ResponseModel
                         {
@@ -340,157 +268,87 @@ namespace SubwayTalentApi.Controllers
         [HttpPost]
         public IHttpActionResult GetUserFiles(UserAccount user)
         {
-            try
+            if (user == null || string.IsNullOrWhiteSpace(user.UserId))
+                throw new SubwayTalentException("Invalid Parameter. Must supply UserId.");
+
+            var result = SubwayContext.Current.UserRepo.GetFiles(user.UserId);
+
+            return Ok(new ResponseModel
             {
-                if (user == null || string.IsNullOrWhiteSpace(user.UserId))
-                    throw new Exception("Invalid Parameter. Must supply UserId.");
-
-
-                var result = SubwayContext.Current.UserRepo.GetFiles(user.UserId);
-
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Success,
-                    Data = result,
-                    RecordCount = (result == null) ? 0 : result.Count
-                });
-            }
-            catch (Exception ex)
-            {
-                var exceptionMessage = (ex.InnerException == null) ? ex.Message : ex.Message + ". " + ex.InnerException.Message;
-                exceptionMessage += ". " + ex.StackTrace;
-
-                SubwayContext.Current.Logger.Log(exceptionMessage);
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Failed,
-                    ErrorMessage = exceptionMessage
-                });
-            }
-
-
+                Status = Status.Success,
+                Data = result,
+                RecordCount = (result == null) ? 0 : result.Count
+            });
         }
 
         [ResponseType(typeof(ResponseModel))]
         [HttpPost]
         public IHttpActionResult GetPlannerCounts(UserAccount user)
         {
-            try
+            if (user == null || string.IsNullOrWhiteSpace(user.UserId))
+                throw new SubwayTalentException("Invalid Parameter. Must supply UserId.");
+
+            var result = SubwayContext.Current.UserRepo.GetPlannerCounts(user.UserId);
+
+            return Ok(new ResponseModel
             {
-                if (user == null || string.IsNullOrWhiteSpace(user.UserId))
-                    throw new Exception("Invalid Parameter. Must supply UserId.");
-
-
-                var result = SubwayContext.Current.UserRepo.GetPlannerCounts(user.UserId);
-
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Success,
-                    Data = result
-                });
-            }
-            catch (Exception ex)
-            {
-                var exceptionMessage = (ex.InnerException == null) ? ex.Message : ex.Message + ". " + ex.InnerException.Message;
-                exceptionMessage += ". " + ex.StackTrace;
-
-                SubwayContext.Current.Logger.Log(exceptionMessage);
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Failed,
-                    ErrorMessage = exceptionMessage
-                });
-            }
-
-
+                Status = Status.Success,
+                Data = result
+            });
         }
 
         [ResponseType(typeof(ResponseModel))]
         [HttpPost]
         public IHttpActionResult GetTalentCounts(UserAccount user)
         {
-            try
+            if (user == null || string.IsNullOrWhiteSpace(user.UserId))
+                throw new SubwayTalentException("Invalid Parameter. Must supply UserId.");
+
+            var result = SubwayContext.Current.UserRepo.GetTalentCounts(user.UserId);
+
+            return Ok(new ResponseModel
             {
-                if (user == null || string.IsNullOrWhiteSpace(user.UserId))
-                    throw new Exception("Invalid Parameter. Must supply UserId.");
-
-
-                var result = SubwayContext.Current.UserRepo.GetTalentCounts(user.UserId);
-
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Success,
-                    Data = result
-                });
-            }
-            catch (Exception ex)
-            {
-                var exceptionMessage = (ex.InnerException == null) ? ex.Message : ex.Message + ". " + ex.InnerException.Message;
-                exceptionMessage += ". " + ex.StackTrace;
-
-                SubwayContext.Current.Logger.Log(exceptionMessage);
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Failed,
-                    ErrorMessage = exceptionMessage
-                });
-            }
-
-
+                Status = Status.Success,
+                Data = result
+            });
         }
 
         [ResponseType(typeof(ResponseModel))]
         [HttpPost]
         public IHttpActionResult SearchTalent(SearchModel searchModel)
         {
-            try
+            if (searchModel == null)
+                throw new SubwayTalentException("Invalid parameter.");
+            if (searchModel.GenreList == null)
+                searchModel.GenreList = new List<int>();
+            if (searchModel.SkillList == null)
+                searchModel.SkillList = new List<int>();
+
+            if (searchModel.DistanceInMeters > 0)
+                if (searchModel.CurrentLocation == null && searchModel.CityStateID == null)
+                    throw new SubwayTalentException("Please add a your location or select a city if searching with proximity.");
+
+            if (searchModel.Sort != null)
             {
-                if (searchModel == null)
-                    throw new Exception("Invalid parameter.");
-                if (searchModel.GenreList == null)
-                    searchModel.GenreList = new List<int>();
-                if (searchModel.SkillList == null)
-                    searchModel.SkillList = new List<int>();
-
-                if (searchModel.DistanceInMeters > 0)
-                    if (searchModel.CurrentLocation == null && searchModel.CityStateID == null)
-                        throw new Exception("Please add a your location or select a city if searching with proximity.");
-
-                if (searchModel.Sort != null)
-                {
-                    if (string.IsNullOrEmpty(searchModel.Sort.Key))
-                        throw new Exception("Please select a sort catagory.");
-                }
-
-                var genreList = string.Join(",", searchModel.GenreList);
-                var skillList = string.Join(",", searchModel.SkillList);
-                var rawResult = SubwayContext.Current.UserRepo.SearchTalent(searchModel.SearchString, genreList, skillList, searchModel.UserId);
-                var usersWithLocation = LocationHelper.FilterDistace<UserAccount>(searchModel, rawResult, "Talent Search");
-
-                //Apply Sorting
-                if (searchModel.Sort != null)
-                    usersWithLocation = SortHelper.Sort<UserAccount>(searchModel.Sort, usersWithLocation);
-
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Success,
-                    Data = usersWithLocation,
-                    RecordCount = (usersWithLocation == null) ? 0 : usersWithLocation.Count
-                });
-            }
-            catch (Exception ex)
-            {
-                var exceptionMessage = (ex.InnerException == null) ? ex.Message : ex.Message + ". " + ex.InnerException.Message;
-                exceptionMessage += ". " + ex.StackTrace;
-
-                SubwayContext.Current.Logger.Log(exceptionMessage);
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Failed,
-                    ErrorMessage = ex.Message
-                });
+                if (string.IsNullOrEmpty(searchModel.Sort.Key))
+                    throw new SubwayTalentException("Please select a sort catagory.");
             }
 
+            var genreList = string.Join(",", searchModel.GenreList);
+            var skillList = string.Join(",", searchModel.SkillList);
+            var rawResult = SubwayContext.Current.UserRepo.SearchTalent(searchModel.SearchString, genreList, skillList, searchModel.UserId);
+            var usersWithLocation = LocationHelper.FilterDistace<UserAccount>(searchModel, rawResult, "Talent Search");
+
+            //Apply Sorting
+            if (searchModel.Sort != null)
+                usersWithLocation = SortHelper.Sort<UserAccount>(searchModel.Sort, usersWithLocation);
+
+            return Ok(new ResponseModel
+            {
+                Status = Status.Success,
+                Data = usersWithLocation,
+                RecordCount = (usersWithLocation == null) ? 0 : usersWithLocation.Count
+            });
 
         }
         [AuthorizationRequired]
@@ -498,55 +356,32 @@ namespace SubwayTalentApi.Controllers
         [HttpPost]
         public IHttpActionResult DeleteUserFile(Files file)
         {
-            try
+            if (file == null)
+                throw new SubwayTalentException("Invalid Request");
+            if (file.FileId == 0)
+                throw new SubwayTalentException("FileId is required.");
+            if (string.IsNullOrEmpty(file.UserId))
+                throw new SubwayTalentException("UserId is required.");
+
+
+            var folderName = ConfigurationManager.AppSettings["Uploads"];
+            var PATH = HttpContext.Current.Server.MapPath("~/" + folderName + "/" + file.UserId + "/");
+            var physicalFile = PATH + file.Name;
+
+            if (!File.Exists(physicalFile))
+                throw new SubwayTalentException("File not found.");
+
+            //if no return this means file exists in DB.
+            var result = SubwayContext.Current.UserRepo.DeleteUserFile(string.Empty, file.FileId, string.Empty);
+
+            if (string.IsNullOrWhiteSpace(result))
+                File.Delete(physicalFile);
+
+            return Ok(new ResponseModel
             {
-
-                if (file == null)
-                    throw new Exception("Invalid Request");
-                if (file.FileId == 0)
-                    throw new Exception("FileId is required.");
-                if (string.IsNullOrEmpty(file.UserId))
-                    throw new Exception("UserId is required.");
-
-
-                var folderName = ConfigurationManager.AppSettings["Uploads"];
-                var PATH = HttpContext.Current.Server.MapPath("~/" + folderName + "/" + file.UserId + "/");
-                var physicalFile = PATH + file.Name;
-
-                if (!File.Exists(physicalFile))
-                {
-                    return Ok(new ResponseModel
-                    {
-                        Status = Status.Failed,
-                        ErrorMessage = "File not found."
-                    });
-                }
-
-                //if no return this means file exists in DB.
-                var result = SubwayContext.Current.UserRepo.DeleteUserFile(string.Empty, file.FileId, string.Empty);
-
-                if (string.IsNullOrWhiteSpace(result))
-                    File.Delete(physicalFile);
-
-                return Ok(new ResponseModel
-                {
-                    Status = (string.IsNullOrWhiteSpace(result)) ? Status.Success : Status.Failed,
-                    ErrorMessage = (string.IsNullOrWhiteSpace(result)) ? string.Empty : result
-                });
-            }
-            catch (Exception ex)
-            {
-                var exceptionMessage = (ex.InnerException == null) ? ex.Message : ex.Message + ". " + ex.InnerException.Message;
-                exceptionMessage += ". " + ex.StackTrace;
-
-                SubwayContext.Current.Logger.Log(exceptionMessage);
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Failed,
-                    ErrorMessage = exceptionMessage
-                });
-            }
-
+                Status = (string.IsNullOrWhiteSpace(result)) ? Status.Success : Status.Failed,
+                ErrorMessage = (string.IsNullOrWhiteSpace(result)) ? string.Empty : result
+            });
 
         }
 
@@ -555,40 +390,22 @@ namespace SubwayTalentApi.Controllers
         [HttpPost]
         public IHttpActionResult SetProfilePic(SetProfilePicModel file)
         {
-            try
+
+            if (file == null)
+                throw new SubwayTalentException("Invalid Parameters.");
+            if (string.IsNullOrWhiteSpace(file.UserId) || file.FileId == 0 || string.IsNullOrWhiteSpace(file.Perspective))
+                throw new SubwayTalentException("Invalid userid or file id or perpective.");
+
+            if (file.Perspective.ToLower() != "t" && file.Perspective.ToLower() != "p")
+                throw new SubwayTalentException("Invalid perspective.");
+
+            SubwayContext.Current.UserRepo.SetProfilePic(file.UserId, file.FileId, file.Perspective.ToLower());
+
+
+            return Ok(new ResponseModel
             {
-
-                if (file == null)
-                    throw new Exception("Invalid Parameters.");
-                if (string.IsNullOrWhiteSpace(file.UserId) || file.FileId == 0 || string.IsNullOrWhiteSpace(file.Perspective))
-                    throw new Exception("Invalid userid or file id or perpective.");
-
-                if (file.Perspective.ToLower() != "t" && file.Perspective.ToLower() != "p")
-                    throw new Exception("Invalid perspective.");
-               
-
-
-
-                SubwayContext.Current.UserRepo.SetProfilePic(file.UserId, file.FileId,file.Perspective.ToLower());
-
-
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Success
-                });
-            }
-            catch (Exception ex)
-            {
-                var exceptionMessage = (ex.InnerException == null) ? ex.Message : ex.Message + ". " + ex.InnerException.Message;
-                exceptionMessage += ". " + ex.StackTrace;
-
-                SubwayContext.Current.Logger.Log(exceptionMessage);
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Failed,
-                    ErrorMessage = ex.Message
-                });
-            }
+                Status = Status.Success
+            });
 
         }
         [AuthorizationRequired]
@@ -596,36 +413,17 @@ namespace SubwayTalentApi.Controllers
         [HttpPost]
         public IHttpActionResult ChangePassword(PasswordModel password)
         {
-            try
+            if (password == null)
+                throw new SubwayTalentException("Invalid Parameters.");
+            if (string.IsNullOrWhiteSpace(password.UserId) || string.IsNullOrWhiteSpace(password.OldPassword) || string.IsNullOrWhiteSpace(password.NewPassword))
+                throw new SubwayTalentException("Some of the parameters were not supplied.");
+
+            SubwayContext.Current.UserRepo.ChangePassword(password.OldPassword, password.NewPassword, password.UserId);
+
+            return Ok(new ResponseModel
             {
-
-                if (password == null)
-                    throw new Exception("Invalid Parameters.");
-                if (string.IsNullOrWhiteSpace(password.UserId) || string.IsNullOrWhiteSpace(password.OldPassword) || string.IsNullOrWhiteSpace(password.NewPassword))
-                    throw new Exception("Some of the parameters were not supplied.");
-
-
-
-                SubwayContext.Current.UserRepo.ChangePassword(password.OldPassword, password.NewPassword, password.UserId);
-
-
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Success
-                });
-            }
-            catch (Exception ex)
-            {
-                var exceptionMessage = (ex.InnerException == null) ? ex.Message : ex.Message + ". " + ex.InnerException.Message;
-                exceptionMessage += ". " + ex.StackTrace;
-
-                SubwayContext.Current.Logger.Log(exceptionMessage);
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Failed,
-                    ErrorMessage = ex.Message
-                });
-            }
+                Status = Status.Success
+            });
 
         }
         [AuthorizationRequired]
@@ -633,255 +431,266 @@ namespace SubwayTalentApi.Controllers
         [HttpPost]
         public IHttpActionResult GetUserComments(UserAccount user)
         {
-            try
+            if (user == null)
+                throw new SubwayTalentException("Invalid parameters.");
+            if (string.IsNullOrWhiteSpace(user.UserId) || string.IsNullOrWhiteSpace(user.Perspective))
+                throw new SubwayTalentException("UserId and Perspective are required.");
+
+            var result = SubwayContext.Current.UserRepo.GetUserRatingsFeedback(user.UserId, user.Perspective.ToUpper());
+
+
+            return Ok(new ResponseModel
             {
-                if (user == null)
-                    throw new Exception("Invalid parameters.");
-                if (string.IsNullOrWhiteSpace(user.UserId) || string.IsNullOrWhiteSpace(user.Perspective))
-                    throw new Exception("UserId and Perspective are required.");
-
-                var result = SubwayContext.Current.UserRepo.GetUserRatingsFeedback(user.UserId, user.Perspective.ToUpper());
-
-
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Success,
-                    RecordCount = result.Count,
-                    Data = result
-                });
-
-
-            }
-            catch (Exception ex)
-            {
-                var exceptionMessage = (ex.InnerException == null) ? ex.Message : ex.Message + ". " + ex.InnerException.Message;
-                exceptionMessage += ". " + ex.StackTrace;
-
-                SubwayContext.Current.Logger.Log(exceptionMessage);
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Failed,
-                    ErrorMessage = exceptionMessage
-                });
-            }
+                Status = Status.Success,
+                RecordCount = result.Count,
+                Data = result
+            });
 
         }
         [AuthorizationRequired]
         [HttpPost]
         public IHttpActionResult Logout(UserModel userDetails)
         {
-            try
+            if (userDetails == null)
+                throw new SubwayTalentException("Invalid parameters.");
+            if (string.IsNullOrWhiteSpace(userDetails.UserId))
+                throw new SubwayTalentException("UserId is required.");
+
+
+            var token = Request.Headers.GetValues("Token").FirstOrDefault();
+            if (!string.IsNullOrWhiteSpace(token))
             {
-                if (userDetails == null)
-                    throw new Exception("Invalid parameters.");
-                if (string.IsNullOrWhiteSpace(userDetails.UserId))
-                    throw new Exception("UserId is required.");
-
-
-                var token = Request.Headers.GetValues("Token").FirstOrDefault();
-                if (!string.IsNullOrWhiteSpace(token))
-                {
-                    SubwayContext.Current.TokenRepo.DeleteToken(token);
-                }
-
-                
-
-                Task.Run(() => SubwayContext.Current.UserRepo.RemoveDeviceID(userDetails.UserId, userDetails.DeviceToken));
-
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Success
-                });
+                SubwayContext.Current.TokenRepo.DeleteToken(token);
             }
-            catch (Exception ex)
+
+            Task.Run(() => SubwayContext.Current.UserRepo.RemoveDeviceID(userDetails.UserId, userDetails.DeviceToken));
+
+            return Ok(new ResponseModel
             {
-                var exceptionMessage = (ex.InnerException == null) ? ex.Message : ex.Message + ". " + ex.InnerException.Message;
-                exceptionMessage += ". " + ex.StackTrace;
+                Status = Status.Success
+            });
 
-                SubwayContext.Current.Logger.Log(exceptionMessage);
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Failed,
-                    ErrorMessage = exceptionMessage
-                });
-            }
         }
         [AuthorizationRequired]
         [HttpPost]
         public IHttpActionResult ChangeSetting(UserModel userDetails)
         {
-            try
+            if (userDetails == null)
+                throw new SubwayTalentException("Invalid parameters.");
+            if (string.IsNullOrWhiteSpace(userDetails.UserId))
+                throw new SubwayTalentException(" UserId is required.");
+
+            SubwayContext.Current.UserRepo.ChangeSettings((userDetails.AllowNotification) ? (short)1 : (short)0, (userDetails.AllowEmail) ? (short)1 : (short)0, userDetails.UserId);
+
+            return Ok(new ResponseModel
             {
-                if (userDetails == null)
-                    throw new Exception("Invalid parameters.");
-                if (string.IsNullOrWhiteSpace(userDetails.UserId))
-                    throw new Exception(" UserId is required.");
+                Status = Status.Success
+            });
 
-                SubwayContext.Current.UserRepo.ChangeSettings((userDetails.AllowNotification) ? (short)1 : (short)0, (userDetails.AllowEmail) ? (short)1 : (short)0, userDetails.UserId);
-
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Success
-                });
-            }
-            catch (Exception ex)
-            {
-                var exceptionMessage = (ex.InnerException == null) ? ex.Message : ex.Message + ". " + ex.InnerException.Message;
-                exceptionMessage += ". " + ex.StackTrace;
-
-                SubwayContext.Current.Logger.Log(exceptionMessage);
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Failed,
-                    ErrorMessage = exceptionMessage
-                });
-            }
         }
         [AuthorizationRequired]
         [HttpPost]
         public IHttpActionResult GetUserNotifications(UserModel userDetails)
         {
-            try
+            if (userDetails == null)
+                throw new SubwayTalentException("Invalid parameters.");
+            if (string.IsNullOrWhiteSpace(userDetails.UserId))
+                throw new SubwayTalentException(" UserId is required.");
+
+            var result = SubwayContext.Current.UserRepo.GetUserNotification(userDetails.UserId);
+
+            return Ok(new ResponseModel
             {
-                if (userDetails == null)
-                    throw new Exception("Invalid parameters.");
-                if (string.IsNullOrWhiteSpace(userDetails.UserId))
-                    throw new Exception(" UserId is required.");
+                Status = Status.Success,
+                Data = result,
+                RecordCount = result.Count
+            });
 
-                var result = SubwayContext.Current.UserRepo.GetUserNotification(userDetails.UserId);
-
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Success,
-                    Data = result,
-                    RecordCount = result.Count
-                });
-            }
-            catch (Exception ex)
-            {
-                var exceptionMessage = (ex.InnerException == null) ? ex.Message : ex.Message + ". " + ex.InnerException.Message;
-                exceptionMessage += ". " + ex.StackTrace;
-
-                SubwayContext.Current.Logger.Log(exceptionMessage);
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Failed,
-                    ErrorMessage = ex.Message
-                });
-            }
         }
         [AuthorizationRequired]
         [HttpPost]
         public IHttpActionResult DeleteUserNotification(LookUpValues details)
         {
-            try
+            if (details == null)
+                throw new SubwayTalentException("Invalid parameters.");
+            if (details.Id == 0)
+                throw new SubwayTalentException("Id is required.");
+
+            SubwayContext.Current.UserRepo.DeleteUserNotification(details.Id);
+
+            return Ok(new ResponseModel
             {
-                if (details == null)
-                    throw new Exception("Invalid parameters.");
-                if (details.Id == 0)
-                    throw new Exception("Id is required.");
+                Status = Status.Success
+            });
 
-                SubwayContext.Current.UserRepo.DeleteUserNotification(details.Id);
-
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Success
-                });
-            }
-            catch (Exception ex)
-            {
-                var exceptionMessage = (ex.InnerException == null) ? ex.Message : ex.Message + ". " + ex.InnerException.Message;
-                exceptionMessage += ". " + ex.StackTrace;
-
-                SubwayContext.Current.Logger.Log(exceptionMessage);
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Failed,
-                    ErrorMessage = ex.Message
-                });
-            }
         }
 
         [HttpPost]
         public IHttpActionResult ForgotPassword(UserModel details)
         {
-            try
+            if (details == null)
+                throw new SubwayTalentException("Invalid parameters.");
+            if (string.IsNullOrWhiteSpace(details.UserId))
+                throw new SubwayTalentException("UserId is required.");
+
+            var userDetails = SubwayContext.Current.UserRepo.GetUserDetails(details.UserId);
+
+            if (userDetails == null)
+                throw new Exception("User not found.");
+
+
+            var generatedPassword = System.Web.Security.Membership.GeneratePassword(10, 3);
+            SubwayContext.Current.UserRepo.UpdatePassword(userDetails.UserId, generatedPassword);
+
+            var emailBody = EmailContentFactory.GetForgotPasswordTemplate(userDetails.FirstName + " " + userDetails.LastName, generatedPassword);
+
+            EmailSender.SendMail("", userDetails.Email, emailBody, ConfigurationManager.AppSettings["ForgotPassword.Subject"]);
+
+            return Ok(new ResponseModel
             {
-                if (details == null)
-                    throw new Exception("Invalid parameters.");
-                if (string.IsNullOrWhiteSpace(details.UserId))
-                    throw new Exception("UserId is required.");
+                Status = Status.Success
+            });
 
-                var userDetails = SubwayContext.Current.UserRepo.GetUserDetails(details.UserId);
-
-                if (userDetails == null)
-                    throw new Exception("User not found.");
-
-
-                var generatedPassword = System.Web.Security.Membership.GeneratePassword(10, 3);
-                SubwayContext.Current.UserRepo.UpdatePassword(userDetails.UserId, generatedPassword);
-
-                var emailBody = EmailContentFactory.GetForgotPasswordTemplate(userDetails.FirstName + " " + userDetails.LastName, generatedPassword);
-
-                EmailSender.SendMail("", userDetails.Email, emailBody, ConfigurationManager.AppSettings["ForgotPassword.Subject"]);
-
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Success
-                });
-            }
-            catch (Exception ex)
-            {
-                var exceptionMessage = (ex.InnerException == null) ? ex.Message : ex.Message + ". " + ex.InnerException.Message;
-                exceptionMessage += ". " + ex.StackTrace;
-
-                SubwayContext.Current.Logger.Log(exceptionMessage);
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Failed,
-                    ErrorMessage = ex.Message
-                });
-            }
         }
 
         [HttpPost]
         public IHttpActionResult SendHelp(HelpModel details)
         {
-            try
+            if (details == null)
+                throw new SubwayTalentException("Invalid parameters.");
+            if (string.IsNullOrWhiteSpace(details.SenderEmail) || string.IsNullOrWhiteSpace(details.SenderName) ||
+                string.IsNullOrWhiteSpace(details.Subject) || string.IsNullOrWhiteSpace(details.Message))
+                throw new SubwayTalentException("Email, Name, Subject and Message are required.");
+
+
+            SubwayContext.Current.UserRepo.AddHelp(details.UserId, details.SenderName, details.SenderEmail, details.Subject, details.Message);
+
+            var emailBody = EmailContentFactory.GetHelpTemplate(details.SenderName);
+            var emailToAdminBody = EmailContentFactory.GetHelpToAdminTemplate(details.SenderName, details.SenderEmail, details.Message);
+
+            EmailSender.SendMail("", details.SenderEmail, emailBody, ConfigurationManager.AppSettings["Help.Subject"]);
+            EmailSender.SendMail("", ConfigurationManager.AppSettings["Help.Email"], emailToAdminBody, ConfigurationManager.AppSettings["Help.AdminSubject"]);
+
+            return Ok(new ResponseModel
             {
-                if (details == null)
-                    throw new Exception("Invalid parameters.");
-                if (string.IsNullOrWhiteSpace(details.SenderEmail) || string.IsNullOrWhiteSpace(details.SenderName) ||
-                    string.IsNullOrWhiteSpace(details.Subject) || string.IsNullOrWhiteSpace(details.Message))
-                    throw new Exception("Email, Name, Subject and Message are required.");
+                Status = Status.Success
+            });
 
-
-                SubwayContext.Current.UserRepo.AddHelp(details.UserId, details.SenderName, details.SenderEmail, details.Subject, details.Message);
-
-                var emailBody = EmailContentFactory.GetHelpTemplate(details.SenderName);
-                var emailToAdminBody = EmailContentFactory.GetHelpToAdminTemplate(details.SenderName, details.SenderEmail, details.Message);
-
-                EmailSender.SendMail("", details.SenderEmail, emailBody, ConfigurationManager.AppSettings["Help.Subject"]);
-                EmailSender.SendMail("", ConfigurationManager.AppSettings["Help.Email"], emailToAdminBody, ConfigurationManager.AppSettings["Help.AdminSubject"]);
-
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Success
-                });
-            }
-            catch (Exception ex)
-            {
-                var exceptionMessage = (ex.InnerException == null) ? ex.Message : ex.Message + ". " + ex.InnerException.Message;
-                exceptionMessage += ". " + ex.StackTrace;
-
-                SubwayContext.Current.Logger.Log(exceptionMessage);
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Failed,
-                    ErrorMessage = ex.Message
-                });
-            }
         }
+
+        [HttpPost]
+        public IHttpActionResult AddPaymentMethod(PaymentModel paymentDetails)
+        {
+            if (paymentDetails == null)
+                throw new SubwayTalentException("Invalid paramaters");
+            if (string.IsNullOrWhiteSpace(paymentDetails.AuthorizationCode) || paymentDetails.PaymentMethodId == 0 || string.IsNullOrWhiteSpace(paymentDetails.UserId))
+                throw new SubwayTalentException("AuthorizationCode, PaymentMethodId and UserId are required");
+
+            var methods = SubwayContext.Current.PaymentRepo.GetPaymentMethods();
+            var userDetails = SubwayContext.Current.UserRepo.GetUserDetails(paymentDetails.UserId);
+
+            var processor = methods.FirstOrDefault((x) => x.Id == paymentDetails.PaymentMethodId);
+            if (processor == null) throw new Exception("payment method not supported.");
+
+            var processorType = string.Format("SubwayTalent.Core.Processors.{0}, SubwayTalent.Core", processor.Processor);
+            //instanciate type of payment processor
+            var payProcessor = (IPaymentProcessor)Activator.CreateInstance(System.Type.GetType(processorType, true), SubwayContext.Current.SubwaySettings);
+            var result = payProcessor.CreatePaymetMethod(paymentDetails.AuthorizationCode, userDetails.FirstName, userDetails.LastName, userDetails.Email);
+
+            if (result == null)
+                throw new SubwayTalentException("Failed to create payment method.");
+
+            SubwayContext.Current.UserRepo.AddPaymentMethod(paymentDetails.UserId,
+                    result["paymentToken"],
+                    result.ContainsKey("customerId") ? result["customerId"] : string.Empty,
+                    paymentDetails.PaymentMethodId,
+                    result.ContainsKey("maskedCard") ? result["maskedCard"] : string.Empty,
+                    result.ContainsKey("cardType") ? result["cardType"] : string.Empty);
+
+            return Ok(new ResponseModel
+            {
+                Status = Status.Success
+            });
+
+        }
+
+        [HttpPost]
+        public IHttpActionResult GetTalentPendingPayments(UserModel details)
+        {
+            if (details == null)
+                throw new SubwayTalentException("Invalid Parameters.");
+            if (string.IsNullOrWhiteSpace(details.UserId))
+                throw new SubwayTalentException("UserId is required.");
+
+            var result = SubwayContext.Current.UserRepo.GetTalentPendingPayments(details.UserId);
+
+            float total = 0;
+
+            result.ForEach(x => total += x.Talents[0].EventRate);
+
+            var retVal = new PendingPaymentModel
+            {
+                Total = total,
+                EventList = result
+            };
+
+
+            return Ok(new ResponseModel
+            {
+                Status = Status.Success,
+                Data = retVal,
+                RecordCount = result.Count
+            });
+
+        }
+
+        [HttpPost]
+        public IHttpActionResult GetPlannerPendingPayments(UserModel details)
+        {
+            if (details == null)
+                throw new SubwayTalentException("Invalid Parameters.");
+            if (string.IsNullOrWhiteSpace(details.UserId))
+                throw new SubwayTalentException("UserId is required.");
+
+            var result = SubwayContext.Current.UserRepo.GetPlannerPendingPayments(details.UserId);
+            float total = 0;
+
+            result.ForEach(x => total += x.Talents[0].EventRate);
+
+            var retVal = new PendingPaymentModel
+            {
+                Total = total,
+                EventList = result
+            };
+
+            return Ok(new ResponseModel
+            {
+                Status = Status.Success,
+                Data = retVal,
+                RecordCount = result.Count
+            });
+        }
+
+        [HttpPost]
+        public IHttpActionResult GetPaymentMethods(UserModel details)
+        {
+            if (details == null)
+                throw new SubwayTalentException("Invalid Parameters.");
+            if (string.IsNullOrWhiteSpace(details.UserId))
+                throw new SubwayTalentException("UserId is required.");
+
+            var result = SubwayContext.Current.UserRepo.GetPaymentMethods(details.UserId, true);
+
+            return Ok(new ResponseModel
+            {
+                Status = Status.Success,
+                Data = result,
+                RecordCount = result.Count
+            });
+
+        }
+
+
 
         #region "Private Method(s)"
 
@@ -902,7 +711,7 @@ namespace SubwayTalentApi.Controllers
                     SubwayContext.Current.UserRepo.DeleteUserFile(userId, 0, Path.GetFileName(userModel.ProfilePic));
                     if (File.Exists(physicalFile))
                         File.Delete(physicalFile);
-                    
+
                     userModel.ProfilePic = profilePicPath;
                 }
                 else

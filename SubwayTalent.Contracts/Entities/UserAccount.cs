@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SubwayTalent.Contracts.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -57,6 +58,10 @@ namespace SubwayTalent.Contracts
         public string Longitude { get; set; }
         public string Latitude { get; set; }
 
-        
+        public List<Payment> PaymentMethod { get; set; }
+
+        //(0) - pending, (1) completed, (2) created, (3) planerpaid, (4) exceptions
+        public short PaymentStatus { get; set; }
+        public DateTime PaymentDateUpdate { get; set; }
     }
 }

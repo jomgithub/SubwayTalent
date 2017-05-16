@@ -1,4 +1,5 @@
-﻿using SubwayTalent.Core.Utilities;
+﻿using SubwayTalent.Core.Exceptions;
+using SubwayTalent.Core.Utilities;
 using SubwayTalentApi.ActionFilters;
 using SubwayTalentApi.Models;
 using System;
@@ -51,6 +52,7 @@ namespace SubwayTalentApi.Controllers
             var userId = Request.Headers.GetValues("UserId").FirstOrDefault();
             var folderName = string.Format("{0}/{1}", ConfigurationManager.AppSettings["Uploads"], userId);
             var PATH = HttpContext.Current.Server.MapPath(string.Format("{0}{1}", "~/", folderName));
+            var environment = ConfigurationManager.AppSettings["Environment"];
             var rootUrl = Request.RequestUri.AbsoluteUri.Replace(Request.RequestUri.AbsolutePath, String.Empty);
             if (!Directory.Exists(PATH))
                 Directory.CreateDirectory(PATH);
@@ -72,7 +74,8 @@ namespace SubwayTalentApi.Controllers
                             var fileType = string.Empty;
                             var thumbnailPhysicalPath = string.Empty;
                             var info = new FileInfo(i.LocalFileName);
-                            var filePath = rootUrl + "/" + folderName + "/" + info.Name;
+                            var filePath = rootUrl + "/" + (string.IsNullOrWhiteSpace(environment) ? string.Empty : environment + "/")                                
+                                            + folderName + "/" + info.Name;
 
                             if (SubwayContext.Current.VideMimeTypesList.FirstOrDefault(f => f.Trim().ToLower() == i.Headers.ContentType.MediaType) != null)
                             {
@@ -121,7 +124,7 @@ namespace SubwayTalentApi.Controllers
                 return task;
             }
             else
-                throw new Exception("The request is not multi-part content.");
+                throw new SubwayTalentException("The request is not multi-part content.");
         }
 
 

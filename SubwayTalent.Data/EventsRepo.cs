@@ -1,5 +1,6 @@
 ﻿using MySql.Data.MySqlClient;
 using SubwayTalent.Contracts;
+using SubwayTalent.Contracts.Entities;
 using SubwayTalent.Contracts.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -14,6 +15,7 @@ namespace SubwayTalent.Data
 {
     public class EventsRepo : IEvent
     {
+        private string schema = ConfigurationManager.AppSettings["DBSchema"];
         private string connectionStr = ConfigurationManager.ConnectionStrings["SubwayTalentConnection"].ConnectionString;
         UserAccount _user = null;
         Event _event = null;
@@ -30,7 +32,7 @@ namespace SubwayTalent.Data
                 {
                     try
                     {
-                        using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_AddEvent", conn))
+                        using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_AddEvent", conn))
                         {
 
                             cmd.Transaction = trans;
@@ -61,21 +63,31 @@ namespace SubwayTalent.Data
                     }
                     catch (Exception ex)
                     {
+                        if (conn.State == ConnectionState.Closed)
+                            conn.Open();
+
                         trans.Rollback();
+
+                        if (conn.State == ConnectionState.Open)
+                            conn.Close();
 
                         throw ex;
                     }
                 }
             }
+
+
         }
 
         private void AddPlannersToEvent(Event eventObj, DbConnection conn, DbTransaction trans)
         {
+            var result = 0;
+
             if (eventObj.Planners != null && eventObj.Planners.Count > 0)
             {
                 foreach (var talent in eventObj.Planners)
                 {
-                    using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_AddEventPlanner", (MySqlConnection)conn))
+                    using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_AddEventPlanner", (MySqlConnection)conn))
                     {
                         if (conn.State == ConnectionState.Closed)
                             conn.Open();
@@ -84,11 +96,22 @@ namespace SubwayTalent.Data
                         cmd.CommandType = CommandType.StoredProcedure;
 
                         cmd.Parameters.Add(new MySqlParameter("event_id", eventObj.Id));
-                        cmd.Parameters.Add(new MySqlParameter("user_id", talent.UserId));
+                        cmd.Parameters.Add(new MySqlParameter("userId", talent.UserId));
 
-                        cmd.ExecuteNonQuery();
+                        MySqlDataReader dr = cmd.ExecuteReader(CommandBehavior.Default);
+
+                        while (dr.Read())
+                        {
+                            result = Convert.ToInt16(dr[0]);
+                        }
+                        dr.Close();
+                        //cmd.ExecuteNonQuery();
+                        //result = 1;
                     }
                 }
+
+                if (result == 0)
+                    throw new Exception("The Planner for this event doesn't have any payment methods.");
             }
         }
 
@@ -104,7 +127,7 @@ namespace SubwayTalent.Data
             {
                 _eventList = new List<Event>();
 
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_GetEventsTalent", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_GetEventsTalent", conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Connection.Open();
@@ -169,7 +192,7 @@ namespace SubwayTalent.Data
                 EventType _eventType = null;
                 _eventList = new List<Event>();
 
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_GetTalentInvites", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_GetTalentInvites", conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Connection.Open();
@@ -247,8 +270,11 @@ namespace SubwayTalent.Data
             {
                 foreach (var skill in eventObj.PreferredSkills)
                 {
-                    using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_AddSkillsToEvent", (MySqlConnection)conn))
+                    using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_AddSkillsToEvent", (MySqlConnection)conn))
                     {
+                        if (conn.State == ConnectionState.Closed)
+                            conn.Open();
+
                         cmd.CommandType = CommandType.StoredProcedure;
 
                         cmd.Transaction = (MySqlTransaction)trans;
@@ -268,7 +294,7 @@ namespace SubwayTalent.Data
             {
                 foreach (var genre in eventObj.PreferredGenres)
                 {
-                    using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_AddGenreToEvent", (MySqlConnection)conn))
+                    using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_AddGenreToEvent", (MySqlConnection)conn))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
                         if (conn.State == ConnectionState.Closed)
@@ -290,7 +316,7 @@ namespace SubwayTalent.Data
             string errMsgs = null;
             using (var conn = new MySqlConnection(connectionStr))
             {
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_AcceptRejectTalentInvite", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_AcceptRejectTalentInvite", conn))
                 {
 
                     if (conn.State == ConnectionState.Closed)
@@ -328,10 +354,11 @@ namespace SubwayTalent.Data
             {
                 _eventList = new List<Event>();
 
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_GetAllEvents", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_GetAllEvents", conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Connection.Open();
+                    if (conn.State == ConnectionState.Closed)
+                        conn.Open();
 
                     cmd.Parameters.Add(new MySqlParameter("userid", userId));
 
@@ -387,7 +414,7 @@ namespace SubwayTalent.Data
             {
                 foreach (var talent in eventObj.Talents)
                 {
-                    using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_RateTalentToEvent", conn))
+                    using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_RateTalentToEvent", conn))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
 
@@ -426,7 +453,7 @@ namespace SubwayTalent.Data
             {
                 foreach (var planner in eventObj.Planners)
                 {
-                    using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_RatePlannerToEvent", conn))
+                    using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_RatePlannerToEvent", conn))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
 
@@ -470,7 +497,7 @@ namespace SubwayTalent.Data
 
                     try
                     {
-                        using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_UpdateEvent", conn))
+                        using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_UpdateEvent", conn))
                         {
 
                             cmd.CommandType = CommandType.StoredProcedure;
@@ -528,7 +555,7 @@ namespace SubwayTalent.Data
                 if (conn.State == ConnectionState.Closed)
                     conn.Open();
 
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_GetEventDetails", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_GetEventDetails", conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
 
@@ -659,7 +686,7 @@ namespace SubwayTalent.Data
             int rowsAffected;
             using (var conn = new MySqlConnection(connectionStr))
             {
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_DropTalentToEvent", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_DropTalentToEvent", conn))
                 {
                     if (conn.State == ConnectionState.Closed)
                         conn.Open();
@@ -690,7 +717,7 @@ namespace SubwayTalent.Data
             _eventList = new List<Event>();
             using (var conn = new MySqlConnection(connectionStr))
             {
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_SearchEvents", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_SearchEvents", conn))
                 {
                     if (conn.State == ConnectionState.Closed)
                         conn.Open();
@@ -733,7 +760,7 @@ namespace SubwayTalent.Data
 
             using (var conn = new MySqlConnection(connectionStr))
             {
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_DeleteEvent", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_DeleteEvent", conn))
                 {
                     if (conn.State == ConnectionState.Closed)
                         conn.Open();
@@ -748,11 +775,56 @@ namespace SubwayTalent.Data
 
         }
 
+        public List<EventPlannerPayment> GetDoneEventsPaymentInfo()
+        {
+            var listPayment = new List<EventPlannerPayment>();
+
+            using (var conn = new MySqlConnection(connectionStr))
+            {
+                listPayment = new List<EventPlannerPayment>();
+
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_GetDoneEvents", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Connection.Open();
+
+
+                    MySqlDataReader dr = cmd.ExecuteReader(CommandBehavior.CloseConnection);
+
+                    while (dr.Read())
+                    {
+                        listPayment.Add(new EventPlannerPayment
+                        {
+                            EventPayment = new Payment
+                            {
+                                Method = new PaymentMethod
+                                {
+                                    Id = Convert.ToInt32(dr["payment_method_id"]),
+                                    Name = Convert.ToString(dr["payment_name"]),
+                                    Processor = Convert.ToString(dr["payment_processor"])
+                                },
+                                PaymentInstrumentId = Convert.ToString(dr["payment_instrument_id"]),
+                                RefreshToken = Convert.ToString(dr["refresh_token"]),
+                                UserId = Convert.ToString(dr["user_id"])
+                            },
+                            EventId = Convert.ToInt32(dr["eventId"]),
+                            EventPlannerId = Convert.ToInt32(dr["eventPlannerId"]),
+                            PaymentStatus = Convert.ToInt16(dr["payment_status"]),
+                            TransactionAuthId = Convert.ToString(dr["transaction_auth_id"]),
+                            TransactionIdCompleted = Convert.ToString(dr["transaction_id_completed"])
+                        });
+                    }
+                }
+            }
+            return listPayment;
+
+        }
+
         #region "Private Method(s)"
 
         private void DeleteEventGenreSkills(int eventId, DbConnection conn, DbTransaction trans)
         {
-            using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_DeleteEventPreferredSkillsGenre", (MySqlConnection)conn))
+            using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_DeleteEventPreferredSkillsGenre", (MySqlConnection)conn))
             {
                 if (conn.State == ConnectionState.Closed)
                     conn.Open();
@@ -770,7 +842,7 @@ namespace SubwayTalent.Data
             {
                 foreach (var talent in eventObj.Talents)
                 {
-                    using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_AddTalentToEvent", (MySqlConnection)conn))
+                    using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_AddTalentToEvent", (MySqlConnection)conn))
                     {
                         if (conn.State == ConnectionState.Closed)
                             conn.Open();
@@ -796,7 +868,7 @@ namespace SubwayTalent.Data
             {
                 _eventList = new List<Event>();
 
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_GetEventsPlanner", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_GetEventsPlanner", conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Connection.Open();
@@ -856,7 +928,7 @@ namespace SubwayTalent.Data
         {
             var userRepo = new UserAccountRepo();
 
-            using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_GetTalentsByEvent", conn))
+            using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_GetTalentsByEvent", conn))
             {
                 cmd.CommandType = CommandType.StoredProcedure;
                 if (conn.State == ConnectionState.Closed)
@@ -903,7 +975,9 @@ namespace SubwayTalent.Data
                         CityStateId = (DBNull.Value == dr["us_cities_id"]) ? 0 : Convert.ToInt32(dr["us_cities_id"]),
                         StateId = Convert.ToString(dr["state_id"]),
                         EventRate = (DBNull.Value == dr["user_rate"]) ? 0 : (float.TryParse(Convert.ToString(dr["user_rate"]), out eventRate) ? eventRate : 0),
-                        RatingTalent = (DBNull.Value == dr["ratingTalent"]) ? 0 : (float.TryParse(Convert.ToString(dr["ratingTalent"]), out rating) ? rating : 0)
+                        RatingTalent = (DBNull.Value == dr["ratingTalent"]) ? 0 : (float.TryParse(Convert.ToString(dr["ratingTalent"]), out rating) ? rating : 0),
+                        PaymentStatus = (DBNull.Value == dr["payment_status"]) ? Convert.ToInt16(0) : Convert.ToInt16(dr["payment_status"]),
+                        PaymentDateUpdate = (DBNull.Value == dr["payment_date_update"]) ? new DateTime() : Convert.ToDateTime(dr["Birthday"])
 
                     };
 
@@ -920,6 +994,7 @@ namespace SubwayTalent.Data
                 talent.Genres = userRepo.GetUserGenreSkill(LookUpValueType.Genres, talent.UserId, conn);
                 talent.SoundCloud = userMedia.Where(x => x.ExternalType == "S").ToList();
                 talent.Youtube = userMedia.Where(x => x.ExternalType == "Y").ToList();
+                talent.PaymentMethod = userRepo.GetPaymentMethods(talent.UserId, true);
             }
 
         }
@@ -928,7 +1003,7 @@ namespace SubwayTalent.Data
         {
             var userRepo = new UserAccountRepo();
             List<UserAccount> userList;
-            using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_GetPlannersByEvent", conn))
+            using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_GetPlannersByEvent", conn))
             {
                 cmd.CommandType = CommandType.StoredProcedure;
                 if (conn.State == ConnectionState.Closed)
@@ -982,16 +1057,17 @@ namespace SubwayTalent.Data
                     user.Genres = userRepo.GetUserGenreSkill(LookUpValueType.Genres, user.UserId, conn);
                     user.SoundCloud = userMedia.Where(x => x.ExternalType == "S").ToList();
                     user.Youtube = userMedia.Where(x => x.ExternalType == "Y").ToList();
+                    user.PaymentMethod = userRepo.GetPaymentMethods(user.UserId, true);
                 }
             }
             return userList;
         }
 
-        private List<LookUpValues> GetEventGenreSkill(LookUpValueType lookUpType, int eventId, DbConnection conn)
+        public List<LookUpValues> GetEventGenreSkill(LookUpValueType lookUpType, int eventId, DbConnection conn)
         {
             List<LookUpValues> _lookupValues;
 
-            using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_GetEventPreferred" + lookUpType.ToString(), (MySqlConnection)conn))
+            using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_GetEventPreferred" + lookUpType.ToString(), (MySqlConnection)conn))
             {
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Connection.Open();

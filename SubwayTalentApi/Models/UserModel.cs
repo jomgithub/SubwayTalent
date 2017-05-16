@@ -1,4 +1,5 @@
 ﻿using SubwayTalent.Contracts;
+using SubwayTalent.Contracts.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -58,6 +59,11 @@ namespace SubwayTalentApi.Models
         public string StateId { get; set; }
         public string Longitude { get; set; }
         public string Latitude { get; set; }
+
+        public List<Payment> PaymentMethod { get; set; }
+
+        public short PaymentStatus { get; set; }
+        public DateTime PaymentDateUpdate { get; set; }
         
     }
 

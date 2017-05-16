@@ -3,6 +3,7 @@ using SubwayTalent.Core;
 using SubwayTalent.Core.Utilities;
 using SubwayTalent.Logging;
 using SubwayTalentApi.ActionFilters;
+using SubwayTalentApi.Facebook;
 using SubwayTalentApi.Filters;
 using SubwayTalentApi.Models;
 using System;
@@ -64,9 +65,9 @@ namespace SubwayTalentApi.Controllers
 
         // POST api/values
         //[ApiAuthenticationFilter]
-        [AuthorizationRequired]
+        //[AuthorizationRequired]
         [HttpPost]
-        public IHttpActionResult testPost(testClass postValue)
+        public IHttpActionResult testPost()
         {
             //if (System.Threading.Thread.CurrentPrincipal != null && System.Threading.Thread.CurrentPrincipal.Identity.IsAuthenticated)
             //{
@@ -78,7 +79,15 @@ namespace SubwayTalentApi.Controllers
             //    }
             //}
 
-            return Ok(postValue);
+
+           var accessToken =  SubwayContext.Current.PayPalProcessor.CreateAccessToken("R23AAGjCg-0o0pYOPIuvliwWBxvo5eM15TtaIrI96daK8wZn3gcAw6skjaU4uV4TetUqGjjixNK0XGNOfq_nFYjiWr5D33yiEy8utv-QXVDZg3oC4f20Znb8tRpkTQ8WZnoYrkA6LNTZXNJazqxFg");
+
+
+            return Ok(new ResponseModel
+            {
+                Status = Status.Success,
+                Data = accessToken
+            });
         }
 
         [HttpPost]

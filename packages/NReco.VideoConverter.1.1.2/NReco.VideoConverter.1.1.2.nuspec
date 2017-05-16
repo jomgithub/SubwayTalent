@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>NReco.VideoConverter</id>
+    <version>1.1.2</version>
+    <title>NReco.VideoConverter</title>
+    <authors>Vitalii Fedorchenko</authors>
+    <owners>Vitalii Fedorchenko</owners>
+    <licenseUrl>https://www.nrecosite.com/video_converter_net.aspx</licenseUrl>
+    <projectUrl>https://www.nrecosite.com/video_converter_net.aspx</projectUrl>
+    <iconUrl>https://www.nrecosite.com/img/nreco-logo-200.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Video converter component for C#/.NET (FFMpeg wrapper). Can convert video files, transcode live streams, extract video thumbnails, apply watermarks to video, screen capture etc.</description>
+    <summary />
+    <releaseNotes>v.1.1.2 changes:
+- FFMpeg updated to v.3.2.2
+- ConvertLiveMediaTask.Stop uses only 'q' command if possible (CTRL+C method not used because of instability)
+- Fixed IOException issue thrown by ConvertLiveMedia
+- added FFMpegConverter.LogLevel property
+- added FFMpegConverter.ExtractFFmpeg() method (forces extraction of ffmpeg binaries)
+
+v.1.1.1 changes:
+- FFMpegConverter.Stop switched from sending CTRL+C to ffmpeg console to 'q' command written to stdin: this approach is more stable and compatible with .NET Core
+- Fixed issue with NullReferenceException from Process.WaitForExit (thrown when Stop method is called from another thread)
+- added NReco.VideoConverter.LT build for NET Standards 1.5 (can be used from .NET Core apps)
+
+v.1.1.0 changes:
+- FFMpeg updated to v.3.0.1
+- added FFMpegConverter.ConvertMedia overload that accepts several FFMpeg inputs -- this is useful for appending audio to video, applying watermark to video, video concatenation (with concat filter)
+- now LogReceived event works for ConvertLiveMedia (useful for debugging purposes)
+- now ConvertProgress event works for ConvertLiveMedia</releaseNotes>
+    <copyright>Copyright 2013-2017 Vitalii Fedorchenko</copyright>
+    <tags>FFMpeg Wrapper Video Audio Converter encode decode mp4 capture watermark thumbnail</tags>
+    <dependencies />
+  </metadata>
+</package>

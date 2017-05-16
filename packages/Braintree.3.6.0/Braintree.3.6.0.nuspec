@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>Braintree</id>
+    <version>3.6.0</version>
+    <title>Braintree</title>
+    <authors>Braintree</authors>
+    <owners>Braintree</owners>
+    <projectUrl>https://github.com/braintree/braintree_dotnet</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Braintree Client Library</description>
+    <summary>The Braintree .NET Client Library will allow you to take payments securely for
+    your application, especially when paired with a Javascript(browser) or Android/Apple(mobile app)
+    frontend. This app offers an SDK for all payment-centric calls to your Braintree account.</summary>
+    <releaseNotes>* Add async support (thanks, @ejohnsonTKTNET and @ebonilla40!)
+* Update Accept-Encoding and User-Agent headers in dotnet core
+* Add stricter XML processing</releaseNotes>
+    <copyright>Copyright © Braintree, a division of PayPal, Inc. 2016</copyright>
+    <tags>braintree paypal venmo intenational payments gateway currencies money visa mastercard bitcoin maestro apple pay android amex jcb diners club discover american express</tags>
+    <dependencies>
+      <group targetFramework=".NETFramework4.5.2" />
+      <group targetFramework="Unsupported0.0">
+        <dependency id="Microsoft.AspNet.WebUtilities" version="1.0.0-rc1-final" />
+        <dependency id="Microsoft.AspNetCore.Http.Abstractions" version="1.0.0" />
+        <dependency id="NETStandard.Library" version="1.6.0" />
+        <dependency id="System.Xml.XPath.XmlDocument" version="4.0.1" />
+      </group>
+    </dependencies>
+    <frameworkAssemblies>
+      <frameworkAssembly assemblyName="System.Xml" targetFramework=".NETFramework4.5.2" />
+      <frameworkAssembly assemblyName="System.Net" targetFramework=".NETFramework4.5.2" />
+      <frameworkAssembly assemblyName="System.Web" targetFramework=".NETFramework4.5.2" />
+    </frameworkAssemblies>
+  </metadata>
+</package>

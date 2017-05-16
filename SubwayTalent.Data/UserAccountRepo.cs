@@ -1,6 +1,7 @@
 ﻿using MySql.Data.MySqlClient;
 using SubwayTalent.Contracts;
 using SubwayTalent.Contracts.Interfaces;
+using SubwayTalent.Core.Exceptions;
 using SubwayTalent.Data.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -15,20 +16,21 @@ namespace SubwayTalent.Data
 {
     public class UserAccountRepo : IUserAccount
     {
-
+        private string schema = ConfigurationManager.AppSettings["DBSchema"];
         private string connectionStr = ConfigurationManager.ConnectionStrings["SubwayTalentConnection"].ConnectionString;
         private List<UserAccount> _userList;
+        private UserAccount _user;
 
         #region "IUserAccount Method(s)"
 
 
-        public UserAccount GetUserDetails(string userId)
+        public UserAccount GetUserDetails(string userId, DbConnection connection = null)
         {
             UserAccount user = null;
 
-            using (var conn = new MySqlConnection(connectionStr))
+            using (var conn = (connection == null) ? new MySqlConnection(connectionStr) : (MySqlConnection)connection)
             {
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_GetUserDetails", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_GetUserDetails", conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Connection.Open();
@@ -49,7 +51,7 @@ namespace SubwayTalent.Data
                             FirstName = Convert.ToString(dr["FirstName"]),
                             Email = Convert.ToString(dr["Email"]),
                             UserId = Convert.ToString(dr["UserId"]),
-                            Birthday = Convert.ToDateTime(dr["Birthday"]),
+                            Birthday = Convert.ToDateTime(dr["Birthday"] as DateTime? ?? null),
                             FacebookUser = Convert.ToBoolean(dr["FacebookUser"]),
                             Bio = Convert.ToString(dr["bio"]),
                             Rate = (DBNull.Value == dr["rate"]) ? 0 : (float.TryParse(Convert.ToString(dr["rate"]), out rate) ? rate : 0),
@@ -83,6 +85,7 @@ namespace SubwayTalent.Data
                 user.Genres = GetUserGenreSkill(LookUpValueType.Genres, userId, conn);
                 user.SoundCloud = userMedia.Where(x => x.ExternalType == "S").ToList();
                 user.Youtube = userMedia.Where(x => x.ExternalType == "Y").ToList();
+                user.PaymentMethod = GetPaymentMethods(userId, true);
             }
             return user;
         }
@@ -92,7 +95,7 @@ namespace SubwayTalent.Data
 
             using (var conn = new MySqlConnection(connectionStr))
             {
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_AddUser", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_AddUser", conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Connection.Open();
@@ -128,7 +131,7 @@ namespace SubwayTalent.Data
                 {
                     try
                     {
-                        using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_UpdateUser", conn))
+                        using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_UpdateUser", conn))
                         {
 
                             cmd.CommandType = CommandType.StoredProcedure;
@@ -144,7 +147,7 @@ namespace SubwayTalent.Data
                             cmd.Parameters.Add(new MySqlParameter("firstname", user.FirstName));
                             cmd.Parameters.Add(new MySqlParameter("lastname", user.LastName));
                             cmd.Parameters.Add(new MySqlParameter("profilePic", user.ProfilePic));
-                            cmd.Parameters.Add(new MySqlParameter("cityStateId", user.CityStateId));                           
+                            cmd.Parameters.Add(new MySqlParameter("cityStateId", user.CityStateId));
                             cmd.Parameters.Add(new MySqlParameter("mobileNumber", user.MobileNumber));
                             cmd.Parameters.Add(new MySqlParameter("gender", user.Gender));
                             cmd.Parameters.Add(new MySqlParameter("talentName", user.TalentName));
@@ -190,7 +193,7 @@ namespace SubwayTalent.Data
 
             using (var conn = new MySqlConnection(connectionStr))
             {
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_GetAllUsers", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_GetAllUsers", conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Connection.Open();
@@ -247,6 +250,7 @@ namespace SubwayTalent.Data
                     userAccount.Genres = GetUserGenreSkill(LookUpValueType.Genres, userAccount.UserId, conn);
                     userAccount.SoundCloud = userMedia.Where(x => x.ExternalType == "S").ToList();
                     userAccount.Youtube = userMedia.Where(x => x.ExternalType == "Y").ToList();
+                    userAccount.PaymentMethod = GetPaymentMethods(userAccount.UserId, true);
                 }
             }
 
@@ -263,12 +267,12 @@ namespace SubwayTalent.Data
 
             using (var conn = new MySqlConnection(connectionStr))
             {
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_LoginUser", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_LoginUser", conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Connection.Open();
                     cmd.Parameters.Add(new MySqlParameter("user_id", userid));
-                    cmd.Parameters.Add(new MySqlParameter("password", password));
+                    cmd.Parameters.Add(new MySqlParameter("passwordParam", password));
 
                     MySqlDataReader dr = cmd.ExecuteReader(CommandBehavior.CloseConnection);
 
@@ -280,9 +284,9 @@ namespace SubwayTalent.Data
                         user.FirstName = Convert.ToString(dr["FirstName"]);
                         user.Email = Convert.ToString(dr["Email"]);
                         user.UserId = Convert.ToString(dr["UserId"]);
-                        user.Birthday = Convert.ToDateTime(dr["Birthday"]);
+                        user.Birthday = Convert.ToDateTime(dr["Birthday"] as DateTime? ?? null); 
                         user.LockedOutDate = Convert.ToDateTime(dr["LockedOutDate"] as DateTime? ?? null);
-                        user.LastLoggedInDate = Convert.ToDateTime(dr["LastLoggedInDate"]);
+                        user.LastLoggedInDate = Convert.ToDateTime(dr["LastLoggedInDate"] as DateTime? ?? null);
                         user.FacebookUser = Convert.ToBoolean(dr["FacebookUser"]);
                     }
 
@@ -299,7 +303,7 @@ namespace SubwayTalent.Data
             }
 
             if (userExists == 1 && user == null)
-                throw new Exception("Incorrect username or password. Please try again");
+                throw new SubwayTalentException("Incorrect username or password. Please try again");
 
 
             return user;
@@ -310,7 +314,7 @@ namespace SubwayTalent.Data
         {
             using (var conn = new MySqlConnection(connectionStr))
             {
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_AddUserFile", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_AddUserFile", conn))
                 {
                     if (conn.State == ConnectionState.Closed)
                         conn.Open();
@@ -335,7 +339,7 @@ namespace SubwayTalent.Data
 
             using (var conn = new MySqlConnection(connectionStr))
             {
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_GetUserFiles", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_GetUserFiles", conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Connection.Open();
@@ -370,7 +374,7 @@ namespace SubwayTalent.Data
 
             using (var conn = new MySqlConnection(connectionStr))
             {
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_DeleteUserFile", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_DeleteUserFile", conn))
                 {
                     if (conn.State == ConnectionState.Closed)
                         conn.Open();
@@ -402,7 +406,7 @@ namespace SubwayTalent.Data
 
             using (var conn = new MySqlConnection(connectionStr))
             {
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_GetPlannerTotals", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_GetPlannerTotals", conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Connection.Open();
@@ -433,7 +437,7 @@ namespace SubwayTalent.Data
 
             using (var conn = new MySqlConnection(connectionStr))
             {
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_GetTalentTotals", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_GetTalentTotals", conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Connection.Open();
@@ -465,7 +469,7 @@ namespace SubwayTalent.Data
             _userList = new List<UserAccount>();
             using (var conn = new MySqlConnection(connectionStr))
             {
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_SearchTalent", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_SearchTalent", conn))
                 {
                     if (conn.State == ConnectionState.Closed)
                         conn.Open();
@@ -508,7 +512,7 @@ namespace SubwayTalent.Data
         {
             List<LookUpValues> _lookupValues;
 
-            using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_GetUser" + lookUpType.ToString(), (MySqlConnection)conn))
+            using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_GetUser" + lookUpType.ToString(), (MySqlConnection)conn))
             {
                 cmd.CommandType = CommandType.StoredProcedure;
                 if (conn.State == ConnectionState.Closed)
@@ -537,7 +541,7 @@ namespace SubwayTalent.Data
         {
             List<ExternalMedia> _lookupValues;
 
-            using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_GetExternalMedia", (MySqlConnection)conn))
+            using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_GetExternalMedia", (MySqlConnection)conn))
             {
                 cmd.CommandType = CommandType.StoredProcedure;
                 if (conn.State == ConnectionState.Closed)
@@ -572,7 +576,7 @@ namespace SubwayTalent.Data
 
             using (var conn = new MySqlConnection(connectionStr))
             {
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_UpdateUserFile", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_UpdateUserFile", conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     if (conn.State == ConnectionState.Closed)
@@ -596,7 +600,7 @@ namespace SubwayTalent.Data
 
             using (var conn = new MySqlConnection(connectionStr))
             {
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_SetProfilePic", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_SetProfilePic", conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     if (conn.State == ConnectionState.Closed)
@@ -605,7 +609,7 @@ namespace SubwayTalent.Data
                     cmd.Parameters.Add(new MySqlParameter("fileId", fileId));
                     cmd.Parameters.Add(new MySqlParameter("user_Id_param", userId));
                     cmd.Parameters.Add(new MySqlParameter("perspective", perpective));
-                    
+
                     rowsAffected = cmd.ExecuteNonQuery();
 
                     if (rowsAffected == 0)
@@ -621,7 +625,7 @@ namespace SubwayTalent.Data
 
             using (var conn = new MySqlConnection(connectionStr))
             {
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_ChangePassword", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_ChangePassword", conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     if (conn.State == ConnectionState.Closed)
@@ -654,7 +658,7 @@ namespace SubwayTalent.Data
             var commentList = new List<RatingComments>();
             using (var conn = new MySqlConnection(connectionStr))
             {
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_GetUserComments", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_GetUserComments", conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     if (conn.State == ConnectionState.Closed)
@@ -692,7 +696,7 @@ namespace SubwayTalent.Data
         {
             using (var conn = new MySqlConnection(connectionStr))
             {
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_AddDeviceID", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_AddDeviceID", conn))
                 {
                     if (conn.State == ConnectionState.Closed)
                         conn.Open();
@@ -711,7 +715,7 @@ namespace SubwayTalent.Data
         {
             using (var conn = new MySqlConnection(connectionStr))
             {
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_RemoveDeviceId", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_RemoveDeviceId", conn))
                 {
                     if (conn.State == ConnectionState.Closed)
                         conn.Open();
@@ -731,7 +735,7 @@ namespace SubwayTalent.Data
             var userDevices = new List<UserDevice>();
             using (var conn = new MySqlConnection(connectionStr))
             {
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_GetUserDevices", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_GetUserDevices", conn))
                 {
                     if (conn.State == ConnectionState.Closed)
                         conn.Open();
@@ -763,7 +767,7 @@ namespace SubwayTalent.Data
             using (var conn = new MySqlConnection(connectionStr))
             {
 
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_ChangeSettings", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_ChangeSettings", conn))
                 {
                     if (conn.State == ConnectionState.Closed)
                         conn.Open();
@@ -783,14 +787,14 @@ namespace SubwayTalent.Data
             }
         }
 
-        public void AddUserNotification(string userId, int eventId, short statusId, string updatedBy, Int16 notifType )
+        public void AddUserNotification(string userId, int eventId, short statusId, string updatedBy, Int16 notifType)
         {
             int rowsAffected = 0;
 
             using (var conn = new MySqlConnection(connectionStr))
             {
 
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_AddNotification", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_AddNotification", conn))
                 {
                     if (conn.State == ConnectionState.Closed)
                         conn.Open();
@@ -825,7 +829,7 @@ namespace SubwayTalent.Data
             EventsRepo eventObj = new EventsRepo();
             using (var conn = new MySqlConnection(connectionStr))
             {
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_GetUserNotifications", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_GetUserNotifications", conn))
                 {
                     if (conn.State == ConnectionState.Closed)
                         conn.Open();
@@ -867,7 +871,7 @@ namespace SubwayTalent.Data
             using (var conn = new MySqlConnection(connectionStr))
             {
 
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_DeleteUserNotifications", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_DeleteUserNotifications", conn))
                 {
                     if (conn.State == ConnectionState.Closed)
                         conn.Open();
@@ -891,7 +895,7 @@ namespace SubwayTalent.Data
             using (var conn = new MySqlConnection(connectionStr))
             {
 
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_UpdatePassword", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_UpdatePassword", conn))
                 {
                     if (conn.State == ConnectionState.Closed)
                         conn.Open();
@@ -913,7 +917,7 @@ namespace SubwayTalent.Data
             using (var conn = new MySqlConnection(connectionStr))
             {
 
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_AddHelp", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_AddHelp", conn))
                 {
                     if (conn.State == ConnectionState.Closed)
                         conn.Open();
@@ -931,12 +935,264 @@ namespace SubwayTalent.Data
             }
         }
 
+
+        public List<Payment> GetPaymentMethods(string userId, bool viewing)
+        {
+            List<Payment> paymentMethodList = new List<Payment>();
+
+            using (var conn = new MySqlConnection(connectionStr))
+            {
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_GetUserPaymentMethods", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Connection.Open();
+                    cmd.Parameters.Add(new MySqlParameter("userId", userId));
+
+
+                    MySqlDataReader dr = cmd.ExecuteReader(CommandBehavior.CloseConnection);
+
+                    while (dr.Read())
+                    {
+                        paymentMethodList.Add(new Payment
+                         {
+                             Method = new Contracts.Entities.PaymentMethod
+                             {
+                                 Id = Convert.ToInt32(dr["payment_method_id"]),
+                                 Name = Convert.ToString(dr["payment_name"]),
+                                 Processor = (viewing) ? string.Empty : Convert.ToString(dr["payment_processor"])
+                             },
+                             PaymentInstrumentId = Convert.ToString(dr["payment_instrument_id"]),
+                             UserId = Convert.ToString(dr["user_id"]),
+                             RefreshToken = (viewing) ? string.Empty : Convert.ToString(dr["refresh_token"]),
+                             CardType = Convert.ToString(dr["card_type"]),
+                             MaskedCardNumber = Convert.ToString(dr["masked_card_no"])
+                         });
+                    }
+                }
+            }
+
+            return paymentMethodList;
+
+        }
+
+        public void AddPaymentMethod(string userId, string refreshToken, string paymentInstrumentId, Int16 paymentMethodId, string maskedCardNo, string cardType)
+        {
+            using (var conn = new MySqlConnection(connectionStr))
+            {
+
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_AddPlannerPaymentMethod", conn))
+                {
+                    if (conn.State == ConnectionState.Closed)
+                        conn.Open();
+
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.Add(new MySqlParameter("userId", userId));
+                    cmd.Parameters.Add(new MySqlParameter("refreshToken", refreshToken));
+                    cmd.Parameters.Add(new MySqlParameter("paymentMethodId", paymentMethodId));
+                    cmd.Parameters.Add(new MySqlParameter("paymentInstrumentId", paymentInstrumentId));
+                    cmd.Parameters.Add(new MySqlParameter("maskedCardNo", maskedCardNo));
+                    cmd.Parameters.Add(new MySqlParameter("cardType", cardType));
+
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+
+        public List<Event> GetTalentPendingPayments(string userId)
+        {
+            var eventList = new List<Event>();
+            var _event = new Event();
+            var _talent = new UserAccount();
+            var _planner = new UserAccount();
+
+            using (var conn = new MySqlConnection(connectionStr))
+            {
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_GetTalentPendingPayments", conn))
+                {
+                    if (conn.State == ConnectionState.Closed)
+                        conn.Open();
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.Add(new MySqlParameter("userId", userId));
+
+                    MySqlDataReader dr = cmd.ExecuteReader(CommandBehavior.CloseConnection);
+
+                    while (dr.Read())
+                    {
+                        float eventRate = 0;
+                        float plannerRating = 0;
+
+                        _event = new Event
+                        {
+                            Name = Convert.ToString(dr["Name"]),
+                            DateCreated = Convert.ToDateTime(dr["dateCreated"]),
+                            DateEnd = Convert.ToDateTime(dr["dateEnd"]),
+                            DateStart = Convert.ToDateTime(dr["dateStarted"]),
+                            Description = Convert.ToString(dr["description"]),
+                            Id = Convert.ToInt16(dr["Id"]),
+                            Location = Convert.ToString(dr["location"]),
+                            Picture = Convert.ToString(dr["picture"]),
+                            Status = (DBNull.Value == dr["status"]) ? 0 : Convert.ToInt16(dr["status"]),
+                            Title = Convert.ToString(dr["title"]),
+                            Type = new EventType
+                            {
+                                Id = Convert.ToInt16(dr["typeId"]),
+                                Name = Convert.ToString(dr["typeName"])
+                            },
+                            Latitude = Convert.ToString(dr["latitude"]),
+                            Longitude = Convert.ToString(dr["longitude"]),
+                            Talents = new List<UserAccount>()
+                             {
+                                 new UserAccount
+                                 {
+                                      EventRate = (DBNull.Value == dr["user_rate"]) ? 0 : (float.TryParse(Convert.ToString(dr["user_rate"]), out eventRate) ? eventRate : 0),                                   
+                                      PaymentStatus = (DBNull.Value == dr["payment_status"]) ? Convert.ToInt16(0) : Convert.ToInt16(dr["payment_status"]),
+                                      PaymentDateUpdate = (DBNull.Value == dr["payment_date_update"]) ? new DateTime() : Convert.ToDateTime(dr["Birthday"])
+                                 
+                                 }
+                             },
+                            Planners = new List<UserAccount>()
+                              {
+                                  new UserAccount
+                                  {
+                                       
+                                       Rating = (DBNull.Value == dr["plannerRating"]) ? 0 : (float.TryParse(Convert.ToString(dr["plannerRating"]), out plannerRating) ? plannerRating : 0),
+                                       LastName = Convert.ToString(dr["LastName"]),
+                                        FirstName = Convert.ToString(dr["FirstName"]),
+                                        Email = Convert.ToString(dr["Email"]),
+                                        UserId = Convert.ToString(dr["UserId"])
+                                  }
+                              }
+
+                        };
+                        eventList.Add(_event);
+
+                        _talent = _event.Talents[0];
+                        _planner = _event.Planners[0];
+                    }
+
+
+
+                    dr.Close();
+                }
+
+                //Loop through the eventList
+                var eventsRepo = new EventsRepo();
+                foreach (var ev in eventList)
+                {
+                    ev.PreferredGenres = eventsRepo.GetEventGenreSkill(LookUpValueType.Genres, ev.Id, conn);
+                    ev.PreferredSkills = eventsRepo.GetEventGenreSkill(LookUpValueType.Skills, ev.Id, conn);
+
+                    ev.Talents[0] = GetUserDetails(userId, conn);
+                    ev.Talents[0].EventRate = _talent.EventRate;
+                    ev.Talents[0].PaymentStatus = _talent.PaymentStatus;
+                    ev.Talents[0].PaymentDateUpdate = _talent.PaymentDateUpdate;
+
+                    ev.Planners[0] = GetUserDetails(_planner.UserId, conn);
+                    ev.Planners[0].Rating = _planner.Rating;
+
+                }
+            }
+
+
+
+            return eventList;
+        }
+
+
+        public List<Event> GetPlannerPendingPayments(string userId)
+        {
+            var eventList = new List<Event>();
+            var _event = new Event();
+            var _talent = new UserAccount();
+            var _planner = new UserAccount();
+
+            using (var conn = new MySqlConnection(connectionStr))
+            {
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_GetPlannerPendingPayments", conn))
+                {
+                    if (conn.State == ConnectionState.Closed)
+                        conn.Open();
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.Add(new MySqlParameter("userId", userId));
+
+                    MySqlDataReader dr = cmd.ExecuteReader(CommandBehavior.CloseConnection);
+
+                    while (dr.Read())
+                    {
+                        float eventRate = 0;
+                        float talentRating = 0;
+
+                        _event = new Event
+                        {
+                            Name = Convert.ToString(dr["Name"]),
+                            DateCreated = Convert.ToDateTime(dr["dateCreated"]),
+                            DateEnd = Convert.ToDateTime(dr["dateEnd"]),
+                            DateStart = Convert.ToDateTime(dr["dateStarted"]),
+                            Description = Convert.ToString(dr["description"]),
+                            Id = Convert.ToInt16(dr["Id"]),
+                            Location = Convert.ToString(dr["location"]),
+                            Picture = Convert.ToString(dr["picture"]),
+                            Status = (DBNull.Value == dr["status"]) ? 0 : Convert.ToInt16(dr["status"]),
+                            Title = Convert.ToString(dr["title"]),
+                            Type = new EventType
+                            {
+                                Id = Convert.ToInt16(dr["typeId"]),
+                                Name = Convert.ToString(dr["typeName"])
+                            },
+                            Latitude = Convert.ToString(dr["latitude"]),
+                            Longitude = Convert.ToString(dr["longitude"]),
+                            Talents = new List<UserAccount>()
+                             {
+                                 new UserAccount
+                                 {
+                                     Rating = (DBNull.Value == dr["user_rating"]) ? 0 : (float.TryParse(Convert.ToString(dr["user_rating"]), out talentRating) ? talentRating : 0),                                       
+                                     LastName = Convert.ToString(dr["LastName"]),
+                                     FirstName = Convert.ToString(dr["FirstName"]),
+                                     Email = Convert.ToString(dr["Email"]),
+                                     TalentName = Convert.ToString(dr["talentName"]),
+                                     UserId = Convert.ToString(dr["UserId"]), 
+                                     EventRate = (DBNull.Value == dr["user_rate"]) ? 0 : (float.TryParse(Convert.ToString(dr["user_rate"]), out eventRate) ? eventRate : 0),                                   
+                                     PaymentStatus = (DBNull.Value == dr["payment_status"]) ? Convert.ToInt16(0) : Convert.ToInt16(dr["payment_status"]),
+                                     PaymentDateUpdate = (DBNull.Value == dr["payment_date_update"]) ? new DateTime() : Convert.ToDateTime(dr["Birthday"])
+                                 
+                                 }
+                             }
+
+                        };
+                        eventList.Add(_event);
+                        _talent = _event.Talents[0];
+                       
+                    }
+
+                    dr.Close();
+                }
+
+                //Loop through the eventList
+                var eventsRepo = new EventsRepo();
+                foreach (var ev in eventList)
+                {
+                    ev.PreferredGenres = eventsRepo.GetEventGenreSkill(LookUpValueType.Genres, ev.Id, conn);
+                    ev.PreferredSkills = eventsRepo.GetEventGenreSkill(LookUpValueType.Skills, ev.Id, conn);
+
+                    ev.Talents[0] = GetUserDetails(userId, conn);
+                    ev.Talents[0].EventRate = _talent.EventRate;
+                    ev.Talents[0].PaymentStatus = _talent.PaymentStatus;
+                    ev.Talents[0].PaymentDateUpdate = _talent.PaymentDateUpdate;                  
+
+                }
+            }
+            return eventList;
+        }
         #endregion
 
         #region "Private Method(s)"
         private void DeleteUserSkills(UserAccount userObj, DbConnection conn, DbTransaction trans)
         {
-            using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_DeleteTalentSkills", (MySqlConnection)conn))
+            using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_DeleteTalentSkills", (MySqlConnection)conn))
             {
                 if (conn.State == ConnectionState.Closed)
                     conn.Open();
@@ -950,7 +1206,7 @@ namespace SubwayTalent.Data
 
         private void DeleteUserGenres(UserAccount userObj, DbConnection conn, DbTransaction trans)
         {
-            using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_DeleteTalentGenres", (MySqlConnection)conn))
+            using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_DeleteTalentGenres", (MySqlConnection)conn))
             {
                 if (conn.State == ConnectionState.Closed)
                     conn.Open();
@@ -968,7 +1224,7 @@ namespace SubwayTalent.Data
             {
                 foreach (var skill in userObj.Skills)
                 {
-                    using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_AddTalentSkill", (MySqlConnection)conn))
+                    using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_AddTalentSkill", (MySqlConnection)conn))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
 
@@ -989,7 +1245,7 @@ namespace SubwayTalent.Data
             {
                 foreach (var genre in userObj.Genres)
                 {
-                    using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_AddTalentGenre", (MySqlConnection)conn))
+                    using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_AddTalentGenre", (MySqlConnection)conn))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
 
@@ -1008,7 +1264,7 @@ namespace SubwayTalent.Data
 
         private void DeleteExternalMedia(UserAccount userObj, string mediaType, DbConnection conn, DbTransaction trans)
         {
-            using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_DeleteExternalMedia", (MySqlConnection)conn))
+            using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_DeleteExternalMedia", (MySqlConnection)conn))
             {
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Transaction = (MySqlTransaction)trans;
@@ -1024,7 +1280,7 @@ namespace SubwayTalent.Data
             {
                 foreach (var item in userObj.SoundCloud)
                 {
-                    using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_AddUserExternalMedia", (MySqlConnection)conn))
+                    using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_AddUserExternalMedia", (MySqlConnection)conn))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
 
@@ -1045,7 +1301,7 @@ namespace SubwayTalent.Data
             {
                 foreach (var item in userObj.Youtube)
                 {
-                    using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_AddUserExternalMedia", (MySqlConnection)conn))
+                    using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_AddUserExternalMedia", (MySqlConnection)conn))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
 
@@ -1064,5 +1320,10 @@ namespace SubwayTalent.Data
         }
 
         #endregion
+
+
+
+
+
     }
 }

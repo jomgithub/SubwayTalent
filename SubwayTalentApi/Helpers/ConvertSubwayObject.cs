@@ -15,7 +15,7 @@ namespace SubwayTalentApi.Helpers
 
             return new Event
             {
-                Id = eventModel.Id, 
+                Id = eventModel.Id,
                 Location = eventModel.Location,
                 Description = eventModel.Description,
                 DateEnd = eventModel.DateEnd,
@@ -41,8 +41,8 @@ namespace SubwayTalentApi.Helpers
                                         TalentName = planner.TalentName,
                                         Rating = planner.Rating,
                                         Comments = planner.Comments,
-                                        ProfilePic= planner.ProfilePic,
-                                        ProfilePicTalent = planner.ProfilePicTalent 
+                                        ProfilePic = planner.ProfilePic,
+                                        ProfilePicTalent = planner.ProfilePicTalent
                                     };
                                 })),
                 Talents = (eventModel.Talents == null) ? null : new List<UserAccount>(
@@ -125,17 +125,17 @@ namespace SubwayTalentApi.Helpers
 
         public static UserModel ConvertToUserModel(UserAccount user)
         {
-            var userAccount = new UserModel();
+            var userModel = new UserModel();
             foreach (var prop in user.GetType().GetProperties())
             {
-                foreach (var userProp in userAccount.GetType().GetProperties())
+                foreach (var userProp in userModel.GetType().GetProperties())
                 {
                     var propName = prop.Name;
 
 
                     if (userProp.Name == "Skills" && user.Skills != null)
                     {
-                        userAccount.Skills = new List<Skills>(user.Skills.Select(skill =>
+                        userModel.Skills = new List<Skills>(user.Skills.Select(skill =>
                         {
                             return new Skills
                             {
@@ -147,7 +147,7 @@ namespace SubwayTalentApi.Helpers
 
                     if (userProp.Name == "Genres" && user.Genres != null)
                     {
-                        userAccount.Genres = new List<Genre>(user.Genres.Select(genre =>
+                        userModel.Genres = new List<Genre>(user.Genres.Select(genre =>
                         {
                             return new Genre
                             {
@@ -159,14 +159,14 @@ namespace SubwayTalentApi.Helpers
 
                     if (userProp.Name == prop.Name)
                     {
-                        userProp.SetValue(userAccount, prop.GetValue(user));
+                        userProp.SetValue(userModel, prop.GetValue(user));
                         continue;
                     }
 
                 }
             }
 
-            return userAccount;
+            return userModel;
         }
 
     }

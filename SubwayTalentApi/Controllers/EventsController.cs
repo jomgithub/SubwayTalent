@@ -1,4 +1,5 @@
 ﻿using SubwayTalent.Contracts;
+using SubwayTalent.Core.Exceptions;
 using SubwayTalent.Core.Utilities;
 using SubwayTalent.Logging;
 using SubwayTalentApi.ActionFilters;
@@ -21,7 +22,7 @@ using System.Web.Script.Serialization;
 
 namespace SubwayTalentApi.Controllers
 {
-   
+
     public class EventsController : ApiController
     {
 
@@ -29,7 +30,7 @@ namespace SubwayTalentApi.Controllers
 
         #region "Web Method(s)"
 
-         [AuthorizationRequired]
+        [AuthorizationRequired]
         [HttpPost]
         public IHttpActionResult AddEvent(EventModel eventDetails)
         {
@@ -65,7 +66,7 @@ namespace SubwayTalentApi.Controllers
                 return Ok(response);
             }
         }
-         [AuthorizationRequired]
+        [AuthorizationRequired]
         [HttpPost]
         public Task<ResponseModel> AddEventMultiPart()
         {
@@ -73,76 +74,46 @@ namespace SubwayTalentApi.Controllers
             return ProcessEventMultipart(false);
 
         }
-         [AuthorizationRequired]
+        [AuthorizationRequired]
         [HttpPost]
         public IHttpActionResult GetEventsPlanner(UserModel user)
         {
-            try
+            if (user == null)
+                throw new SubwayTalentException("Invalid parameters.");
+            if (string.IsNullOrWhiteSpace(user.UserId))
+                throw new SubwayTalentException("UserId is required.");
+
+            var result = SubwayContext.Current.EventRepo.GetEventsPlanner(user.UserId);
+
+            response = new ResponseModel
             {
+                Status = Status.Success,
+                Data = result,
+                RecordCount = (result == null) ? 0 : result.Count
+            };
 
-                var result = SubwayContext.Current.EventRepo.GetEventsPlanner(user.UserId);
-
-                response = new ResponseModel
-                {
-                    Status = Status.Success,
-                    Data = result,
-                    RecordCount = (result == null) ? 0 : result.Count
-                };
-
-                return Ok(response);
-
-
-            }
-            catch (Exception ex)
-            {
-                var exceptionMessage = (ex.InnerException == null) ? ex.Message : ex.Message + ". " + ex.InnerException.Message;
-                exceptionMessage += ". " + ex.StackTrace;
-
-                SubwayContext.Current.Logger.Log(exceptionMessage);
-
-                response = new ResponseModel
-                {
-                    Status = Status.Failed,
-                    ErrorMessage = exceptionMessage
-                };
-
-                return Ok(response);
-            }
+            return Ok(response);
         }
 
-         [AuthorizationRequired]
+        [AuthorizationRequired]
         [HttpPost]
         public IHttpActionResult GetEventsTalent(UserModel user)
         {
-            try
+            if (user == null)
+                throw new SubwayTalentException("Invalid parameters.");
+            if (string.IsNullOrWhiteSpace(user.UserId))
+                throw new SubwayTalentException("UserId is required.");
+
+            var result = SubwayContext.Current.EventRepo.GetEventsTalent(user.UserId);
+
+            response = new ResponseModel
             {
-                var userId = (user == null) ? null : user.UserId;
-                var result = SubwayContext.Current.EventRepo.GetEventsTalent(userId);
+                Status = Status.Success,
+                Data = result,
+                RecordCount = (result == null) ? 0 : result.Count
+            };
 
-                response = new ResponseModel
-                {
-                    Status = Status.Success,
-                    Data = result,
-                    RecordCount = (result == null) ? 0 : result.Count
-                };
-
-                return Ok(response);
-            }
-            catch (Exception ex)
-            {
-                var exceptionMessage = (ex.InnerException == null) ? ex.Message : ex.Message + ". " + ex.InnerException.Message;
-                exceptionMessage += ". " + ex.StackTrace;
-
-                SubwayContext.Current.Logger.Log(exceptionMessage);
-
-                response = new ResponseModel
-                {
-                    Status = Status.Failed,
-                    ErrorMessage = exceptionMessage
-                };
-
-                return Ok(response);
-            }
+            return Ok(response);
         }
 
         /// <summary>
@@ -153,74 +124,47 @@ namespace SubwayTalentApi.Controllers
         [HttpPost]
         public IHttpActionResult GetAllEvents(HomeModel homeModel)
         {
-            try
+            if (homeModel == null)
+                throw new SubwayTalentException("Invalid parameters.");
+            //if (string.IsNullOrWhiteSpace(homeModel.UserId))
+            //    throw new SubwayTalentException("UserId is required.");
+
+            var result = SubwayContext.Current.EventRepo.GetAllEvents(homeModel.UserId);
+
+            //TODO: timezones
+            if (homeModel.RemoveExpiredDates == 1)
+                result = result.Where(x => x.DateStart >= ((homeModel.CurrentDateTime.ToShortDateString() == "1/1/0001") ? DateTime.Now : homeModel.CurrentDateTime)).ToList();
+
+            response = new ResponseModel
             {
-                var userId = (homeModel == null) ? null : homeModel.UserId;
-                var result = SubwayContext.Current.EventRepo.GetAllEvents(userId);
+                Status = Status.Success,
+                Data = result,
+                RecordCount = (result == null) ? 0 : result.Count
+            };
 
-                //TODO: timezones
-                if (homeModel.RemoveExpiredDates == 1)
-                    result = result.Where(x => x.DateStart >= ((homeModel.CurrentDateTime.ToShortDateString() == "1/1/0001") ? DateTime.Now : homeModel.CurrentDateTime)).ToList();
-
-
-                response = new ResponseModel
-                {
-                    Status = Status.Success,
-                    Data = result,
-                    RecordCount = (result == null) ? 0 : result.Count
-                };
-
-                return Ok(response);
-            }
-            catch (Exception ex)
-            {
-                var exceptionMessage = (ex.InnerException == null) ? ex.Message : ex.Message + ". " + ex.InnerException.Message;
-                exceptionMessage += ". " + ex.StackTrace;
-
-                SubwayContext.Current.Logger.Log(exceptionMessage);
-
-                response = new ResponseModel
-                {
-                    Status = Status.Failed,
-                    ErrorMessage = ex.Message
-                };
-
-                return Ok(response);
-            }
+            return Ok(response);
         }
 
-         [AuthorizationRequired]
+        [AuthorizationRequired]
         [HttpPost]
         public IHttpActionResult GetPlannerInvites(UserModel user)
         {
-            try
+            if (user == null)
+                throw new SubwayTalentException("Invalid parameters.");
+            if (string.IsNullOrWhiteSpace(user.UserId))
+                throw new SubwayTalentException("UserId is required.");
+
+            var result = SubwayContext.Current.EventRepo.GetPlannerInvites(user.UserId);
+
+            response = new ResponseModel
             {
-                var result = SubwayContext.Current.EventRepo.GetPlannerInvites(user.UserId);
+                Status = Status.Success,
+                Data = result,
+                RecordCount = (result == null) ? 0 : result.Count
+            };
 
-                response = new ResponseModel
-                {
-                    Status = Status.Success,
-                    Data = result,
-                    RecordCount = (result == null) ? 0 : result.Count
-                };
+            return Ok(response);
 
-                return Ok(response);
-            }
-            catch (Exception ex)
-            {
-                var exceptionMessage = (ex.InnerException == null) ? ex.Message : ex.Message + ". " + ex.InnerException.Message;
-                exceptionMessage += ". " + ex.StackTrace;
-
-                SubwayContext.Current.Logger.Log(exceptionMessage);
-
-                response = new ResponseModel
-                {
-                    Status = Status.Failed,
-                    ErrorMessage = exceptionMessage
-                };
-
-                return Ok(response);
-            }
         }
 
         /// <summary>
@@ -228,122 +172,90 @@ namespace SubwayTalentApi.Controllers
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
-         [AuthorizationRequired]
+        [AuthorizationRequired]
         [HttpPost]
         public IHttpActionResult GetTalentInvites(UserModel user)
         {
-            try
+
+            if (user == null)
+                throw new SubwayTalentException("Invalid parameters.");
+            if (string.IsNullOrWhiteSpace(user.UserId))
+                throw new SubwayTalentException("UserId is required.");
+
+            var result = SubwayContext.Current.EventRepo.GetTalentInvites(user.UserId);
+
+            response = new ResponseModel
             {
-                var result = SubwayContext.Current.EventRepo.GetTalentInvites(user.UserId);
+                Status = Status.Success,
+                Data = result,
+                RecordCount = (result == null) ? 0 : result.Count
+            };
 
-                response = new ResponseModel
-                {
-                    Status = Status.Success,
-                    Data = result,
-                    RecordCount = (result == null) ? 0 : result.Count
-                };
+            return Ok(response);
 
-                return Ok(response);
-            }
-            catch (Exception ex)
-            {
-                var exceptionMessage = (ex.InnerException == null) ? ex.Message : ex.Message + ". " + ex.InnerException.Message;
-                exceptionMessage += ". " + ex.StackTrace;
-
-                SubwayContext.Current.Logger.Log(exceptionMessage);
-
-                response = new ResponseModel
-                {
-                    Status = Status.Failed,
-                    ErrorMessage = ex.Message
-                };
-
-                return Ok(response);
-            }
         }
-         [AuthorizationRequired]
+        [AuthorizationRequired]
         [HttpPost]
         public IHttpActionResult AddTalentsToEvent(EventModel eventModel)
         {
-            try
+            if (eventModel == null)
+                throw new SubwayTalentException("Event Details is nothing");
+
+            if (eventModel.Id == 0)
+                throw new SubwayTalentException("Please add an event id.");
+
+            if (eventModel.Talents == null || eventModel.Talents.Count == 0)
+                throw new SubwayTalentException("Please add talent(s).");
+
+            SubwayContext.Current.EventRepo.AddTalentToEvent(new Event
             {
-                if (eventModel == null)
-                    throw new Exception("Event Details is nothing");
-
-                if (eventModel.Id == 0)
-                    throw new Exception("Please add an event id.");
-
-                if (eventModel.Talents == null || eventModel.Talents.Count == 0)
-                    throw new Exception("Please add talent(s).");
-
-
-
-
-                SubwayContext.Current.EventRepo.AddTalentToEvent(new Event
-                {
-                    Id = eventModel.Id,
-                    Talents = new List<UserAccount>(
-                                        eventModel.Talents.Select(talent =>
+                Id = eventModel.Id,
+                Talents = new List<UserAccount>(
+                                    eventModel.Talents.Select(talent =>
+                                    {
+                                        return new UserAccount
                                         {
-                                            return new UserAccount
-                                            {
-                                                UserId = talent.UserId
-                                            };
-                                        }))
-                });
+                                            UserId = talent.UserId
+                                        };
+                                    }))
+            });
 
-
-                response = new ResponseModel
-                {
-                    Status = Status.Success
-                };
-
-                return Ok(response);
-            }
-            catch (Exception ex)
+            response = new ResponseModel
             {
-                var exceptionMessage = (ex.InnerException == null) ? ex.Message : ex.Message + ". " + ex.InnerException.Message;
-                exceptionMessage += ". " + ex.StackTrace;
+                Status = Status.Success
+            };
 
-                SubwayContext.Current.Logger.Log(exceptionMessage);
+            return Ok(response);
 
-                response = new ResponseModel
-                {
-                    Status = Status.Failed,
-                    ErrorMessage = exceptionMessage
-                };
-
-                return Ok(response);
-            }
         }
 
-        
+
         private string AcceptRejectRequestTalentInvite(Event eventObj, InviteStatus status, string userId, string updatedBy)
         {
             var result = string.Empty;
-            var talent = eventObj.Talents.FirstOrDefault(x => x.UserId == userId);  
+            var talent = eventObj.Talents.FirstOrDefault(x => x.UserId == userId);
 
             var talentUpdatedBy = eventObj.Talents.FirstOrDefault(x => x.UserId == updatedBy);
-            var plannerUpdatedBy = eventObj.Planners.FirstOrDefault(x => x.UserId == updatedBy);          
+            var plannerUpdatedBy = eventObj.Planners.FirstOrDefault(x => x.UserId == updatedBy);
 
             switch (status)
             {
                 case InviteStatus.Accepted:
                     {
                         //check if the userId is associated to the event.
-                        if (talent == null) throw new Exception("The userId is not a talent to the event.");
+                        if (talent == null) throw new SubwayTalentException("The userId is not a talent to the event.");
                         //check if the udpatedBy is associated to the event.
-                        if (talentUpdatedBy == null && plannerUpdatedBy == null) throw new Exception("You do not belong to the event.");
+                        if (talentUpdatedBy == null && plannerUpdatedBy == null) throw new SubwayTalentException("You do not belong to the event.");
 
                         //talent accepted
                         if (updatedBy.ToLower() == talent.UserId.ToLower())
                         {
                             if (InviteStatus.Requested == (InviteStatus)talent.Status)
-                                throw new Exception("You can't accept if your the one who requested for the event."); 
-                               
-                           
+                                throw new SubwayTalentException("You can't accept if your the one who requested for the event.");
+
+
                             result = SubwayContext.Current.EventRepo.AcceptRejectRequestTalentInvite(updatedBy, eventObj.Id, (short)status, updatedBy);
-                            
+
                         }
                         //planner accepted request
                         if (updatedBy.ToLower() == eventObj.Planners[0].UserId.ToLower())
@@ -354,9 +266,9 @@ namespace SubwayTalentApi.Controllers
                 case InviteStatus.Rejected:
                     {
                         //check if the userId is associated to the event.
-                        if (talent == null) throw new Exception("The userId is not a talent to the event.");
+                        if (talent == null) throw new SubwayTalentException("The userId is not a talent to the event.");
                         //check if the udpatedBy is associated to the event.
-                        if (talentUpdatedBy == null && plannerUpdatedBy == null) throw new Exception("You do not belong to the event.");
+                        if (talentUpdatedBy == null && plannerUpdatedBy == null) throw new SubwayTalentException("You do not belong to the event.");
 
                         //talent rejected
                         if (updatedBy.ToLower() == talent.UserId.ToLower())
@@ -369,22 +281,22 @@ namespace SubwayTalentApi.Controllers
                         break;
                     }
                 case InviteStatus.Invited:
-                    {   
+                    {
                         //check if the udpatedBy is associated to the event.
-                        if (plannerUpdatedBy == null || plannerUpdatedBy.UserId.ToLower() != updatedBy.ToLower()) 
-                            throw new Exception("You do not belong to event or you are not allowed to invite a talent.");
+                        if (plannerUpdatedBy == null || plannerUpdatedBy.UserId.ToLower() != updatedBy.ToLower())
+                            throw new SubwayTalentException("You do not belong to event or you are not allowed to invite a talent.");
                         result = SubwayContext.Current.EventRepo.AcceptRejectRequestTalentInvite(userId, eventObj.Id, (short)status, updatedBy);
-                       
+
                         break;
                     }
                 case InviteStatus.Requested:
                     {
-                        result = SubwayContext.Current.EventRepo.AcceptRejectRequestTalentInvite(userId, eventObj.Id, (short)status, updatedBy);                     
+                        result = SubwayContext.Current.EventRepo.AcceptRejectRequestTalentInvite(userId, eventObj.Id, (short)status, updatedBy);
                         break;
                     }
                 default:
                     {
-                        throw new Exception("Invalid status.");                        
+                        throw new SubwayTalentException("Invalid status.");
                     }
             }
             return result;
@@ -395,64 +307,42 @@ namespace SubwayTalentApi.Controllers
         /// </summary>
         /// <param name="model">Status [0-pending,1-accepted,2-rejected,3-requested],  UserId is the userid of the talent</param>
         /// <returns></returns>
-         [AuthorizationRequired]
+        [AuthorizationRequired]
         [HttpPost]
         public IHttpActionResult AcceptRejectRequestTalentInvite(AcceptRejectModel model)
         {
-            try
+            if (model == null)
+                throw new SubwayTalentException("Invalid parameters.");
+            if (model.EventId <= 0)
+                throw new SubwayTalentException("Invalid EventId");
+            if (string.IsNullOrEmpty(model.UserId))
+                throw new SubwayTalentException("Invalid UserId");
+            if (model.Status < 0 || model.Status > 3)
+                throw new SubwayTalentException("Invalid Status");
+            if (string.IsNullOrWhiteSpace(model.UpdatedBy))
+                throw new SubwayTalentException("Please supply UpdatedBy parameter");
+
+            var eventObj = SubwayContext.Current.EventRepo.GetEventDetails(model.EventId);
+
+            if (eventObj == null)
+                throw new SubwayTalentException("Event doesn't exists.");
+
+            var result = AcceptRejectRequestTalentInvite(eventObj, (InviteStatus)model.Status, model.UserId, model.UpdatedBy);
+
+            if (!string.IsNullOrWhiteSpace(result))
+                throw new SubwayTalentException(result);
+
+
+            var userObj = SubwayContext.Current.UserRepo.GetUserDetails(model.UserId);
+
+            SubwayContext.Current.Notifications.SendStatus((InviteStatus)model.Status, eventObj, userObj, model.UpdatedBy);
+            //EmailNotifications.SendStatus((InviteStatus)model.Status, eventObj, userObj, model.UpdatedBy);
+
+            return Ok(new ResponseModel
             {
-                if (model == null)
-                    throw new Exception("Invalid parameters.");
-                if (model.EventId <= 0)
-                    throw new Exception("Invalid EventId");
-                if (string.IsNullOrEmpty(model.UserId))
-                    throw new Exception("Invalid UserId");
-                if (model.Status < 0 || model.Status > 3)
-                    throw new Exception("Invalid Status");
-                if (string.IsNullOrWhiteSpace(model.UpdatedBy))
-                    throw new Exception("Please supply UpdatedBy parameter");
+                Status = Status.Success
+            });
 
-                var eventObj = SubwayContext.Current.EventRepo.GetEventDetails(model.EventId);
-
-                if (eventObj == null)
-                    throw new Exception("Event doesn't exists.");
-
-                var result = AcceptRejectRequestTalentInvite(eventObj, (InviteStatus)model.Status, model.UserId, model.UpdatedBy);
-
-                if (!string.IsNullOrWhiteSpace(result))
-                {
-                    return Ok(new ResponseModel
-                    {
-                        Status = Status.Failed,
-                        ErrorMessage = result
-                    });
-                }
-
-                var userObj = SubwayContext.Current.UserRepo.GetUserDetails(model.UserId);
-
-                SubwayContext.Current.Notifications.SendStatus((InviteStatus)model.Status, eventObj, userObj, model.UpdatedBy);
-                //EmailNotifications.SendStatus((InviteStatus)model.Status, eventObj, userObj, model.UpdatedBy);
-
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Success
-                });
-            }
-            catch (Exception ex)
-            {
-                var exceptionMessage = (ex.InnerException == null) ? ex.Message : ex.Message + ". " + ex.InnerException.Message;
-                exceptionMessage += ". " + ex.StackTrace;
-
-                SubwayContext.Current.Logger.Log(exceptionMessage);
-
-                response = new ResponseModel
-                {
-                    Status = Status.Failed,
-                    ErrorMessage = ex.Message
-                };
-
-                return Ok(response);
-            }
         }
 
         /// <summary>
@@ -477,45 +367,26 @@ namespace SubwayTalentApi.Controllers
         ///}
         /// </param>
         /// <returns></returns>
-         [AuthorizationRequired]
+        [AuthorizationRequired]
         [ResponseType(typeof(ResponseModel))]
         [HttpPost]
         public IHttpActionResult RateTalentToEvent(EventModel eventObj)
         {
-            try
+            if (eventObj == null)
+                throw new SubwayTalentException("Invalid parameters.");
+            if (eventObj.Talents == null || eventObj.Talents.Count <= 0)
+                throw new SubwayTalentException("No talents.");
+            if (eventObj.Planners == null || eventObj.Planners.Count <= 0)
+                throw new SubwayTalentException("The planner is required please add one.");
+
+            var errorResult = SubwayContext.Current.EventRepo.RateTalentToEvent(ConvertSubwayObject.ConvertToEvent(eventObj));
+
+            return Ok(new ResponseModel
             {
+                Status = (errorResult.Count <= 0) ? Status.Success : Status.Failed,
+                ErrorMessage = (errorResult.Count <= 0) ? null : string.Format("Can't rate talent(s) [{0}] that hasn't accepted/confirmed to the event or talent(s) doesn't belong to event.", string.Join(",", errorResult))
+            });
 
-                if (eventObj == null)
-                    throw new Exception("Invalid parameters.");
-                if (eventObj.Talents == null || eventObj.Talents.Count <= 0)
-                    throw new Exception("No talents.");
-                if (eventObj.Planners == null || eventObj.Planners.Count <= 0)
-                    throw new Exception("The planner is required please add one.");
-
-
-                var errorResult = SubwayContext.Current.EventRepo.RateTalentToEvent(ConvertSubwayObject.ConvertToEvent(eventObj));
-
-                return Ok(new ResponseModel
-                {
-                    Status = (errorResult.Count <= 0) ? Status.Success : Status.Failed,
-                    ErrorMessage = (errorResult.Count <= 0) ? null : string.Format("Can't rate talent(s) [{0}] that hasn't accepted/confirmed to the event or talent(s) doesn't belong to event.", string.Join(",", errorResult))
-                });
-            }
-            catch (Exception ex)
-            {
-                var exceptionMessage = (ex.InnerException == null) ? ex.Message : ex.Message + ". " + ex.InnerException.Message;
-                exceptionMessage += ". " + ex.StackTrace;
-
-                SubwayContext.Current.Logger.Log(exceptionMessage);
-
-                response = new ResponseModel
-                {
-                    Status = Status.Failed,
-                    ErrorMessage = exceptionMessage
-                };
-
-                return Ok(response);
-            }
         }
 
         /// <summary>
@@ -540,48 +411,30 @@ namespace SubwayTalentApi.Controllers
         ///}
         ///</param>
         /// <returns></returns>
-         [AuthorizationRequired]
+        [AuthorizationRequired]
         [ResponseType(typeof(ResponseModel))]
         [HttpPost]
         public IHttpActionResult RatePlannerToEvent(EventModel eventObj)
         {
-            try
+            if (eventObj == null)
+                throw new SubwayTalentException("Invalid parameters.");
+            if (eventObj.Planners == null || eventObj.Planners.Count <= 0)
+                throw new SubwayTalentException("No planner(s).");
+            if (eventObj.Talents == null || eventObj.Talents.Count <= 0)
+                throw new SubwayTalentException("Talent required.");
+
+
+            var errorResult = SubwayContext.Current.EventRepo.RatePlannerToEvent(ConvertSubwayObject.ConvertToEvent(eventObj));
+
+            return Ok(new ResponseModel
             {
+                Status = (errorResult.Count <= 0) ? Status.Success : Status.Failed,
+                ErrorMessage = (errorResult.Count <= 0) ? null : string.Format("Can't rate this planner [{0}]. Planner doesn't belong to the event.", string.Join(",", errorResult))
+            });
 
-                if (eventObj == null)
-                    throw new Exception("Invalid parameters.");
-                if (eventObj.Planners == null || eventObj.Planners.Count <= 0)
-                    throw new Exception("No planner(s).");
-                if (eventObj.Talents == null || eventObj.Talents.Count <= 0)
-                    throw new Exception("Talent required.");
-
-
-                var errorResult = SubwayContext.Current.EventRepo.RatePlannerToEvent(ConvertSubwayObject.ConvertToEvent(eventObj));
-
-                return Ok(new ResponseModel
-                {
-                    Status = (errorResult.Count <= 0) ? Status.Success : Status.Failed,
-                    ErrorMessage = (errorResult.Count <= 0) ? null : string.Format("Can't rate this planner [{0}]. Planner doesn't belong to the event.", string.Join(",", errorResult))
-                });
-            }
-            catch (Exception ex)
-            {
-                var exceptionMessage = (ex.InnerException == null) ? ex.Message : ex.Message + ". " + ex.InnerException.Message;
-                exceptionMessage += ". " + ex.StackTrace;
-
-                SubwayContext.Current.Logger.Log(exceptionMessage);
-
-                response = new ResponseModel
-                {
-                    Status = Status.Failed,
-                    ErrorMessage = exceptionMessage
-                };
-
-                return Ok(response);
-            }
         }
 
-         [AuthorizationRequired]
+        [AuthorizationRequired]
         [ResponseType(typeof(ResponseModel))]
         [HttpPost]
         public Task<ResponseModel> UpdateEventMultiPart()
@@ -597,200 +450,116 @@ namespace SubwayTalentApi.Controllers
         [HttpPost]
         public IHttpActionResult DropTalent(DropTalentModel dropModel)
         {
-            try
+            if (dropModel == null)
+                throw new SubwayTalentException("Invalid parameter.");
+            if (string.IsNullOrWhiteSpace(dropModel.UserId))
+                throw new SubwayTalentException("UserId is required parameter.");
+            if (string.IsNullOrWhiteSpace(dropModel.UpdatedBy))
+                throw new SubwayTalentException("UpdatedBy is required parameter.");
+
+            var result = SubwayContext.Current.EventRepo.DropTalent(dropModel.EventId, dropModel.UserId, dropModel.Comments, dropModel.Performed, dropModel.UpdatedBy);
+
+            if (!string.IsNullOrWhiteSpace(result))
+                throw new SubwayTalentException(result);
+
+            return Ok(new ResponseModel
             {
-                if (dropModel == null)
-                    throw new Exception("Invalid parameter.");
-                if (string.IsNullOrWhiteSpace(dropModel.UserId))
-                    throw new Exception("UserId is required parameter.");
-                if (string.IsNullOrWhiteSpace(dropModel.UpdatedBy))
-                    throw new Exception("UpdatedBy is required parameter.");
+                Status = Status.Success
+            });
 
-
-                var result = SubwayContext.Current.EventRepo.DropTalent(dropModel.EventId, dropModel.UserId, dropModel.Comments, dropModel.Performed, dropModel.UpdatedBy);
-
-
-
-                if (!string.IsNullOrWhiteSpace(result))
-                {
-                    return Ok(new ResponseModel
-                    {
-                        Status = Status.Failed,
-                        ErrorMessage = result
-                    });
-                }
-
-
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Success
-                });
-
-            }
-            catch (Exception ex)
-            {
-                var exceptionMessage = (ex.InnerException == null) ? ex.Message : ex.Message + ". " + ex.InnerException.Message;
-                exceptionMessage += ". " + ex.StackTrace;
-
-                SubwayContext.Current.Logger.Log(exceptionMessage);
-
-                response = new ResponseModel
-                {
-                    Status = Status.Failed,
-                    ErrorMessage = ex.Message
-                };
-
-                return Ok(response);
-            }
         }
 
         [HttpPost]
         public IHttpActionResult SearchEvent(SearchModel searchModel)
         {
-            try
+            GeoCoordinate currentLoc = null;
+
+            if (searchModel == null)
+                throw new SubwayTalentException("Invalid parameter.");
+            if (searchModel.GenreList == null)
+                searchModel.GenreList = new List<int>();
+            if (searchModel.SkillList == null)
+                searchModel.SkillList = new List<int>();
+
+            if (searchModel.DistanceInMeters > 0)
+                if (searchModel.CurrentLocation == null && searchModel.CityStateID == null)
+                    throw new SubwayTalentException("Please add a your location or select a city if searching with proximity.");
+
+            if (searchModel.Sort != null)
             {
-                GeoCoordinate currentLoc = null;
-
-                if (searchModel == null)
-                    throw new Exception("Invalid parameter.");
-                if (searchModel.GenreList == null)
-                    searchModel.GenreList = new List<int>();
-                if (searchModel.SkillList == null)
-                    searchModel.SkillList = new List<int>();
-
-                if (searchModel.DistanceInMeters > 0)
-                    if (searchModel.CurrentLocation == null && searchModel.CityStateID == null)
-                        throw new Exception("Please add a your location or select a city if searching with proximity.");
-
-                if (searchModel.Sort != null)
-                {
-                    if (string.IsNullOrEmpty(searchModel.Sort.Key))
-                        throw new Exception("Please select a sort catagory.");
-                }
-
-                var genreList = string.Join(",", searchModel.GenreList);
-                var skillList = string.Join(",", searchModel.SkillList);
-
-                var rawResult = SubwayContext.Current.EventRepo.SearchEvent(searchModel.SearchString, genreList, skillList, searchModel.UserId);
-                //var eventsWithLocation = FilterDistance(searchModel, currentLoc, rawResult);
-                var eventsWithLocation = LocationHelper.FilterDistace<Event>(searchModel, rawResult, "Event Search");
-
-                //Apply Sorting
-                if (searchModel.Sort != null)
-                    eventsWithLocation = SortHelper.Sort<Event>(searchModel.Sort, eventsWithLocation);
-
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Success,
-                    Data = eventsWithLocation,
-                    RecordCount = (eventsWithLocation == null) ? 0 : eventsWithLocation.Count
-                });
-
+                if (string.IsNullOrEmpty(searchModel.Sort.Key))
+                    throw new SubwayTalentException("Please select a sort catagory.");
             }
-            catch (Exception ex)
+
+            var genreList = string.Join(",", searchModel.GenreList);
+            var skillList = string.Join(",", searchModel.SkillList);
+
+            var rawResult = SubwayContext.Current.EventRepo.SearchEvent(searchModel.SearchString, genreList, skillList, searchModel.UserId);
+            //var eventsWithLocation = FilterDistance(searchModel, currentLoc, rawResult);
+            var eventsWithLocation = LocationHelper.FilterDistace<Event>(searchModel, rawResult, "Event Search");
+
+            //Apply Sorting
+            if (searchModel.Sort != null)
+                eventsWithLocation = SortHelper.Sort<Event>(searchModel.Sort, eventsWithLocation);
+
+            return Ok(new ResponseModel
             {
-                var exceptionMessage = (ex.InnerException == null) ? ex.Message : ex.Message + ". " + ex.InnerException.Message;
-                exceptionMessage += ". " + ex.StackTrace;
+                Status = Status.Success,
+                Data = eventsWithLocation,
+                RecordCount = (eventsWithLocation == null) ? 0 : eventsWithLocation.Count
+            });
 
-                SubwayContext.Current.Logger.Log(exceptionMessage);
-
-                response = new ResponseModel
-                {
-                    Status = Status.Failed,
-                    ErrorMessage = ex.Message
-                };
-
-                return Ok(response);
-            }
         }
 
         [HttpPost]
         public IHttpActionResult GetEventDetails(EventModel eventModel)
         {
-            try
+            if (eventModel == null)
+                throw new SubwayTalentException("Invalid Parameter.");
+            if (eventModel.Id == 0)
+                throw new SubwayTalentException("Id is required.");
+
+            var result = SubwayContext.Current.EventRepo.GetEventDetails(eventModel.Id);
+
+            return Ok(new ResponseModel
             {
-                if (eventModel == null)
-                    throw new Exception("Invalid Parameter.");
-                if (eventModel.Id == 0)
-                    throw new Exception("Id is required.");
-
-                var result = SubwayContext.Current.EventRepo.GetEventDetails(eventModel.Id);
-
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Success,
-                    Data = result,
-                    RecordCount = (result !=null) ? 1 : 0
-                });
-
-            }
-            catch (Exception ex)
-            {
-                var exceptionMessage = (ex.InnerException == null) ? ex.Message : ex.Message + ". " + ex.InnerException.Message;
-                exceptionMessage += ". " + ex.StackTrace;
-
-                SubwayContext.Current.Logger.Log(exceptionMessage);
-
-                response = new ResponseModel
-                {
-                    Status = Status.Failed,
-                    ErrorMessage = exceptionMessage
-                };
-
-                return Ok(response);
-            }
+                Status = Status.Success,
+                Data = result,
+                RecordCount = (result != null) ? 1 : 0
+            });
         }
 
-         [AuthorizationRequired]
+        [AuthorizationRequired]
         [ResponseType(typeof(ResponseModel))]
         [HttpPost]
         public IHttpActionResult DeleteEvent(EventModel eventDetails)
         {
-            try
+            if (eventDetails == null)
+                throw new SubwayTalentException("Invalid parameters.");
+            if (eventDetails.Id == 0)
+                throw new SubwayTalentException("Invalid EventId.");
+            if (string.IsNullOrWhiteSpace(eventDetails.DeleteReason))
+                throw new SubwayTalentException("Delete Reason is required.");
+
+            var eventObj = SubwayContext.Current.EventRepo.GetEventDetails(eventDetails.Id);
+
+            if (eventObj == null)
+                throw new Exception("Event Doesn't Exists.");
+
+            SubwayContext.Current.EventRepo.DeleteEvent(eventDetails.Id);
+            eventObj.DeleteReason = eventDetails.DeleteReason;
+
+            SubwayContext.Current.Notifications.SendEventUpdates(eventObj, 2, eventObj.DeleteReason);
+            JavaScriptSerializer sr = new JavaScriptSerializer();
+
+            SubwayContext.Current.Logger.Log("Event Deletion");
+            SubwayContext.Current.Logger.Log(sr.Serialize(eventObj));
+
+            return Ok(new ResponseModel
             {
+                Status = Status.Success
+            });
 
-                if (eventDetails == null)
-                    throw new Exception("Invalid parameters.");
-                if (eventDetails.Id == 0)
-                    throw new Exception("Invalid EventId.");
-                if (string.IsNullOrWhiteSpace(eventDetails.DeleteReason))
-                    throw new Exception("Delete Reason is required.");
-
-                var eventObj = SubwayContext.Current.EventRepo.GetEventDetails(eventDetails.Id);
-
-                if (eventObj == null)
-                    throw new Exception("Event Doesn't Exists.");
-
-                SubwayContext.Current.EventRepo.DeleteEvent(eventDetails.Id);
-                eventObj.DeleteReason = eventDetails.DeleteReason;
-
-                SubwayContext.Current.Notifications.SendEventUpdates(eventObj, 2, eventObj.DeleteReason);
-                JavaScriptSerializer sr = new JavaScriptSerializer();
-
-                SubwayContext.Current.Logger.Log("Event Deletion");
-                SubwayContext.Current.Logger.Log(sr.Serialize(eventObj));
-
-                return Ok(new ResponseModel
-                {
-                    Status = Status.Success
-                });
-
-            }
-            catch (Exception ex)
-            {
-                var exceptionMessage = (ex.InnerException == null) ? ex.Message : ex.Message + ". " + ex.InnerException.Message;
-                exceptionMessage += ". " + ex.StackTrace;
-
-                SubwayContext.Current.Logger.Log(exceptionMessage);
-
-                response = new ResponseModel
-                {
-                    Status = Status.Failed,
-                    ErrorMessage = ex.Message
-                };
-
-                return Ok(response);
-            }
         }
         #endregion
 
@@ -838,6 +607,7 @@ namespace SubwayTalentApi.Controllers
             var folderName = ConfigurationManager.AppSettings["Uploads"];
             var PATH = HttpContext.Current.Server.MapPath("~/" + folderName);
             var rootUrl = Request.RequestUri.AbsoluteUri.Replace(Request.RequestUri.AbsolutePath, String.Empty);
+            var environment = ConfigurationManager.AppSettings["Environment"];
             if (!Directory.Exists(PATH))
                 Directory.CreateDirectory(PATH);
             var errorMessage = string.Empty;
@@ -847,55 +617,44 @@ namespace SubwayTalentApi.Controllers
                 var streamProvider = new SubwayMultipartFormDataStreamProvider(PATH);
                 var task = Request.Content.ReadAsMultipartAsync(streamProvider).ContinueWith<ResponseModel>(t =>
                 {
-                    try
+
+                    if (t.IsFaulted || t.IsCanceled)
+                        throw new HttpResponseException(HttpStatusCode.InternalServerError);
+
+                    //TODO: separate the logic of getting files frrom getting data                   
+                    var fileInfo = streamProvider.FileData.Select(i =>
                     {
-                        if (t.IsFaulted || t.IsCanceled)
-                            throw new HttpResponseException(HttpStatusCode.InternalServerError);
+                        var info = new FileInfo(i.LocalFileName);
+                        var filePath = rootUrl + "/" + (string.IsNullOrWhiteSpace(environment) ? string.Empty : environment + "/")
+                                       + folderName + "/" + info.Name;
 
-                        //TODO: separate the logic of getting files frrom getting data                   
-                        var fileInfo = streamProvider.FileData.Select(i =>
-                        {
-                            var info = new FileInfo(i.LocalFileName);
-                            return new FileDesc(info.Name, rootUrl + "/" + folderName + "/" + info.Name, info.Length / 1024, i.Headers.ContentType.MediaType);
-                        });
+                        return new FileDesc(info.Name, filePath, info.Length / 1024, i.Headers.ContentType.MediaType);
+                    });
 
-                        var eventDetails = ParseEventData(streamProvider);
-                        if (!isUpdate)
-                            AddEventDetails(fileInfo, eventDetails);
-                        else
-                        {
-                            errorMessage = UpdateEventData(PATH, fileInfo, eventDetails);
-                            if (!string.IsNullOrWhiteSpace(errorMessage))
-                                SubwayContext.Current.Notifications.SendEventUpdates(ConvertSubwayObject.ConvertToEvent(eventDetails), 1, null);
+                    var eventDetails = ParseEventData(streamProvider);
 
-                        }
-
-
-                        return new ResponseModel
-                        {
-                            Status = (string.IsNullOrWhiteSpace(errorMessage)) ? Status.Success : Status.Failed,
-                            ErrorMessage = (string.IsNullOrWhiteSpace(errorMessage)) ? null : errorMessage
-                        };
-                    }
-                    catch (Exception ex)
+                    if (!isUpdate)
+                        AddEventDetails(fileInfo, eventDetails);
+                    else
                     {
-                        var exceptionMessage = (ex.InnerException == null) ? ex.Message : ex.Message + ". " + ex.InnerException.Message;
-                        exceptionMessage += ". " + ex.StackTrace;
+                        errorMessage = UpdateEventData(PATH, fileInfo, eventDetails);
+                        if (!string.IsNullOrWhiteSpace(errorMessage))
+                            SubwayContext.Current.Notifications.SendEventUpdates(ConvertSubwayObject.ConvertToEvent(eventDetails), 1, null);
 
-                        SubwayContext.Current.Logger.Log(exceptionMessage);
-
-                        return new ResponseModel
-                        {
-                            Status = Status.Failed,
-                            ErrorMessage = exceptionMessage
-                        };
                     }
+
+                    return new ResponseModel
+                    {
+                        Status = (string.IsNullOrWhiteSpace(errorMessage)) ? Status.Success : Status.Failed,
+                        ErrorMessage = (string.IsNullOrWhiteSpace(errorMessage)) ? null : errorMessage
+                    };
+
                 });
 
                 return task;
             }
             else
-                throw new Exception("The request is not multi-part content.");
+                throw new SubwayTalentException("The request is not multi-part content.");
         }
 
         private string UpdateEventData(string PATH, IEnumerable<FileDesc> fileInfo, EventModel eventDetails)

@@ -14,6 +14,7 @@ namespace SubwayTalent.Data
    
     public class LookUpValuesRepo : ILookUpValues
     {
+        private string schema = ConfigurationManager.AppSettings["DBSchema"];
         private string connectionStr = ConfigurationManager.ConnectionStrings["SubwayTalentConnection"].ConnectionString;
         IList<LookUpValues> _lookupValues;
 
@@ -21,7 +22,7 @@ namespace SubwayTalent.Data
         {
             using (var conn = new MySqlConnection(connectionStr))
             {               
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_GetAll" + lookUpType.ToString(), conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_GetAll" + lookUpType.ToString(), conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     if (cmd.Connection.State == ConnectionState.Closed)
@@ -51,7 +52,7 @@ namespace SubwayTalent.Data
 
             using (var conn = new MySqlConnection(connectionStr))
             {
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_GetStates", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_GetStates", conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     if (cmd.Connection.State == ConnectionState.Closed)
@@ -81,7 +82,7 @@ namespace SubwayTalent.Data
 
             using (var conn = new MySqlConnection(connectionStr))
             {
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_GetCitiesByStateId", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_GetCitiesByStateId", conn))
                 {
                     if(cmd.Connection.State == ConnectionState.Closed)
                         cmd.Connection.Open();
@@ -129,7 +130,7 @@ namespace SubwayTalent.Data
 
             using (var conn = new MySqlConnection(connectionStr))
             {
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_GetLatLongByCityStateId", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_GetLatLongByCityStateId", conn))
                 {
                     if (cmd.Connection.State == ConnectionState.Closed)
                         cmd.Connection.Open();

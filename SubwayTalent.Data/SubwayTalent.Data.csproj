@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>SubwayTalent.Data</RootNamespace>
     <AssemblyName>SubwayTalent.Data</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -44,7 +45,9 @@
   <ItemGroup>
     <Compile Include="EventsRepo.cs" />
     <Compile Include="LookUpValuesRepo.cs" />
+    <Compile Include="PaymentRepo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SettingsRepo.cs" />
     <Compile Include="TokenRepo.cs" />
     <Compile Include="UserAccountRepo.cs" />
   </ItemGroup>
@@ -53,6 +56,10 @@
     <ProjectReference Include="..\SubwayTalent.Contracts\SubwayTalent.Contracts.csproj">
       <Project>{b52c92a4-d0b0-4bea-9689-e362f50149e6}</Project>
       <Name>SubwayTalent.Contracts</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SubwayTalent.Core\SubwayTalent.Core.csproj">
+      <Project>{c1cb37c5-51ca-4371-ab1e-3b1ca48b8afb}</Project>
+      <Name>SubwayTalent.Core</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

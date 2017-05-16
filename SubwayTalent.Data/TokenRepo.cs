@@ -13,13 +13,14 @@ namespace SubwayTalent.Data
 {
     public class TokenRepo : ITokenRepo
     {
+        private string schema = ConfigurationManager.AppSettings["DBSchema"];
         private string connectionStr = ConfigurationManager.ConnectionStrings["SubwayTalentConnection"].ConnectionString;
 
         public void AddToken(Token token)
         {
             using (var conn = new MySqlConnection(connectionStr))
             {
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_AddUserToken", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_AddUserToken", conn))
                 {
                     if (conn.State == ConnectionState.Closed)
                         conn.Open();
@@ -40,7 +41,7 @@ namespace SubwayTalent.Data
 
             using (var conn = new MySqlConnection(connectionStr))
             {
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_GetUserToken", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_GetUserToken", conn))
                 {
                     if (conn.State == ConnectionState.Closed)
                         conn.Open();
@@ -72,7 +73,7 @@ namespace SubwayTalent.Data
         {
             using (var conn = new MySqlConnection(connectionStr))
             {
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_DeleteUserToken", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_DeleteUserToken", conn))
                 {
                     if (conn.State == ConnectionState.Closed)
                         conn.Open();
@@ -88,7 +89,7 @@ namespace SubwayTalent.Data
         {
             using (var conn = new MySqlConnection(connectionStr))
             {
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_UpdateUserToken", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_UpdateUserToken", conn))
                 {
                     if (conn.State == ConnectionState.Closed)
                         conn.Open();
@@ -106,7 +107,7 @@ namespace SubwayTalent.Data
         {
             using (var conn = new MySqlConnection(connectionStr))
             {
-                using (MySqlCommand cmd = new MySqlCommand("subwaytalent.spSubway_DeleteTokenByUserId", conn))
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_DeleteTokenByUserId", conn))
                 {
                     if (conn.State == ConnectionState.Closed)
                         conn.Open();

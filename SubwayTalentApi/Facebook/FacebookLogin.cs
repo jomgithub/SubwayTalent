@@ -35,6 +35,10 @@ namespace SubwayTalentApi.Facebook
             string jsonResponse = string.Empty;
             jsonResponse = userInfo.ReadToEnd();
 
+
+           
+            
+
             // Deserialize and convert the JSON object to the Facebook.User object type
             JavaScriptSerializer sr = new JavaScriptSerializer();
             string jsondata = jsonResponse;
@@ -42,6 +46,15 @@ namespace SubwayTalentApi.Facebook
            
             UserModel converted = sr.Deserialize<UserModel>(jsondata);
             converted.FacebookUser = true;
+
+            //// Request the Facebook user information
+            //Uri targetUserUriFriends = new Uri("https://graph.facebook.com/"+ converted.UserId +"/friends?access_token=" + accessToken);
+            //HttpWebRequest userFriends = (HttpWebRequest)HttpWebRequest.Create(targetUserUriFriends);
+
+
+            //// Read the returned JSON object response
+            //StreamReader friendsStream = new StreamReader(userFriends.GetResponse().GetResponseStream());
+            //jsonResponse = friendsStream.ReadToEnd();
 
             // Return the current Facebook user
             return converted;

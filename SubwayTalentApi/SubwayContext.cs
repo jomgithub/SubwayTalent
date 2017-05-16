@@ -16,17 +16,30 @@ namespace SubwayTalentApi
         private static SubwayContext _current = null;
         private static object _contextLock = new object();
 
+        #region "private repo objects"
         private IUserAccount _userRepo;
-        private IEvent  _eventRepo;
-        private ILookUpValues  _lookupValuesRepo;
-        private string[] _imageMimeTypes;
-        private string[] _videoMimeTypes;
+        private IEvent _eventRepo;
+        private ILookUpValues _lookupValuesRepo;
+        private ITokenRepo _tokenRepo;
+        private ISettings _settingsRepo;
+        private IPaymentRepo _paymentRepo;
+        #endregion    
+
+        #region "private tool objects"
         private IThumbnailGenerator _generator;
         private ILogger _logger;
-        private IEmailProvider  _emailProvider;
+        private IEmailProvider _emailProvider;
         private IAPNPushNotification _appleNotification;
         private NotificationHelper _notification;
-        private ITokenRepo _tokenRepo;
+        private IPayPalProcessor _paypalProcessor;
+        private IBraintreeProcessor _braintreeProcessor;
+        #endregion
+        
+        private string[] _imageMimeTypes;
+        private string[] _videoMimeTypes;
+        private Dictionary<string, string> _subwaySettings;
+        
+
 
         public static SubwayContext Current
         {
@@ -39,7 +52,17 @@ namespace SubwayTalentApi
                 }
                 return _current;
             }
-        }     
+        }
+
+        internal Dictionary<string, string> SubwaySettings
+        {
+            get 
+            {
+                if (_subwaySettings == null)
+                    _subwaySettings = SubwayContext.Current.SettingsRepo.GetSettings();
+                return _subwaySettings;
+            }
+        }
 
         #region Tool(s)
 
@@ -117,6 +140,27 @@ namespace SubwayTalentApi
             }
         }
 
+        internal IPayPalProcessor PayPalProcessor
+        {
+            get
+            {
+                if (_paypalProcessor == null)
+                    _paypalProcessor = ProviderFactory.CreateProvider<IPayPalProcessor>();
+                return _paypalProcessor;
+            }
+        }
+
+        internal IBraintreeProcessor BraintreeProcessor
+        {
+            get
+            {
+                if (_braintreeProcessor == null)
+                    _braintreeProcessor = ProviderFactory.CreateProvider<IBraintreeProcessor>();
+                return _braintreeProcessor;
+            }
+        }
+
+
         #endregion
 
         #region repositories
@@ -164,6 +208,27 @@ namespace SubwayTalentApi
             }
         }
 
+        internal ISettings SettingsRepo
+        {
+            get
+            {
+                if (_settingsRepo == null)
+                    _settingsRepo = ProviderFactory.CreateProvider<ISettings>();
+
+                return _settingsRepo;
+            }
+        }
+
+        internal IPaymentRepo PaymentRepo
+        {
+            get
+            {
+                if (_paymentRepo == null)
+                    _paymentRepo = ProviderFactory.CreateProvider<IPaymentRepo>();
+
+                return _paymentRepo;
+            }
+        }
         #endregion
 
     }

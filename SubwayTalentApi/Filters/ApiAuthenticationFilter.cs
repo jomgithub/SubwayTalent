@@ -1,6 +1,7 @@
 ﻿using SubwayTalentApi.Filters;
 using SubwayTalentApi.Helpers;
 using SubwayTalentApi.Models;
+using System;
 using System.Threading;
 using System.Web.Http.Controllers;
 
@@ -55,7 +56,8 @@ namespace SubwayTalentApi.Filters
                     basicAuthenticationIdentity.FirstName = userObj.FirstName;
                     basicAuthenticationIdentity.LastName = userObj.LastName;
                     basicAuthenticationIdentity.Email = userObj.Email;
-                    basicAuthenticationIdentity.Birthday = userObj.Birthday;                   
+                    basicAuthenticationIdentity.Birthday = userObj.Birthday;  
+                                     
                 }
                     
                 return true;

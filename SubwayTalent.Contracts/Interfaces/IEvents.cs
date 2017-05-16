@@ -54,5 +54,9 @@ namespace SubwayTalent.Contracts.Interfaces
         List<Event> SearchEvent(string searchString, string genreList, string skillList, string userId = null);
 
         void DeleteEvent(int eventId);
+
+        List<EventPlannerPayment> GetDoneEventsPaymentInfo();
+
+        
     }
 }

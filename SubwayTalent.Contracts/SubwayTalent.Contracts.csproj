@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>SubwayTalent.Contracts</RootNamespace>
     <AssemblyName>SubwayTalent.Contracts</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -40,16 +41,22 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Entities\Event.cs" />
+    <Compile Include="Entities\EventPlannerPayment.cs" />
     <Compile Include="Entities\EventType.cs" />
     <Compile Include="Entities\ExternalMedia.cs" />
     <Compile Include="Entities\Files.cs" />
+    <Compile Include="Entities\PaymentException.cs" />
+    <Compile Include="Entities\PaymentMethod.cs" />
     <Compile Include="Entities\Token.cs" />
     <Compile Include="Interfaces\IEvents.cs" />
     <Compile Include="Interfaces\ILookUpValues.cs" />
+    <Compile Include="Interfaces\IPaymentRepo.cs" />
+    <Compile Include="Interfaces\ISettings.cs" />
     <Compile Include="Interfaces\ITokenRepo.cs" />
     <Compile Include="Interfaces\IUserAccount.cs" />
     <Compile Include="Entities\PlannerCounts.cs" />
     <Compile Include="Entities\LookUpValues.cs" />
+    <Compile Include="Entities\Payment.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Entities\RatingComments.cs" />
     <Compile Include="Entities\UserAccount.cs" />

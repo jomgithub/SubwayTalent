@@ -7,18 +7,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubwayTalent.Core", "Subway
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubwayTalent.Data", "SubwayTalent.Data\SubwayTalent.Data.csproj", "{B7028171-730A-4F04-A3AE-30791C8177F7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubwayTalent.Tests", "SubwayTalent.Tests\SubwayTalent.Tests.csproj", "{62DFF85D-EADE-4BA4-92AC-B456D51DD2DD}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubwayTalent.Contracts", "SubwayTalent.Contracts\SubwayTalent.Contracts.csproj", "{B52C92A4-D0B0-4BEA-9689-E362F50149E6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubwayTalent.Logging", "SubwayTalent.Logging\SubwayTalent.Logging.csproj", "{48807809-D734-4D40-9005-47D90C8F77BD}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{0F55CE5B-6069-472E-93F6-1007D74A2A2A}"
-	ProjectSection(SolutionItems) = preProject
-		.nuget\NuGet.Config = .nuget\NuGet.Config 
-		.nuget\NuGet.exe = .nuget\NuGet.exe
-		.nuget\NuGet.targets = .nuget\NuGet.targets
-	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubwayTalent.SendGridProvider", "SubwayTalent.SendGridProvider\SubwayTalent.SendGridProvider.csproj", "{711AA0DE-2EB8-4F3B-A338-81CA798F2107}"
 EndProject
@@ -42,10 +35,6 @@ Global
 		{B7028171-730A-4F04-A3AE-30791C8177F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B7028171-730A-4F04-A3AE-30791C8177F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B7028171-730A-4F04-A3AE-30791C8177F7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{62DFF85D-EADE-4BA4-92AC-B456D51DD2DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{62DFF85D-EADE-4BA4-92AC-B456D51DD2DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{62DFF85D-EADE-4BA4-92AC-B456D51DD2DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{62DFF85D-EADE-4BA4-92AC-B456D51DD2DD}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B52C92A4-D0B0-4BEA-9689-E362F50149E6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B52C92A4-D0B0-4BEA-9689-E362F50149E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B52C92A4-D0B0-4BEA-9689-E362F50149E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
