@@ -483,7 +483,7 @@ namespace SubwayTalentApi.Controllers
 
             if (searchModel.DistanceInMeters > 0)
                 if (searchModel.CurrentLocation == null && searchModel.CityStateID == null)
-                    throw new SubwayTalentException("Please add a your location or select a city if searching with proximity.");
+                    throw new SubwayTalentException("Please add a location or select a city if searching with proximity");
 
             if (searchModel.Sort != null)
             {
