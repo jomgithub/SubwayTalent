@@ -2027,7 +2027,7 @@ CREATE  PROCEDURE `spSubway_GetStates`(
 BEGIN
 
 	select distinct state_id, state_name 
-    from us_cities;
+    from us_cities order by state_name asc;
 
 END$$
 
