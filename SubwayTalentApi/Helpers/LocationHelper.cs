@@ -59,8 +59,8 @@ namespace SubwayTalentApi.Helpers
                                 {
                                     var cityLocation = LocationHelper.IsValidLocation(city.Latitude, city.Longitude);
 
-                                    //multiplied by 1k because Client-side is passing KM.
-                                    if (itemLoc.GetDistanceTo(cityLocation) <= searchModel.DistanceInMeters * 1000)
+                                    //multiplied by 1609.34 because Client-side is now passing units in Mi.
+                                    if (itemLoc.GetDistanceTo(cityLocation) <= searchModel.DistanceInMeters * 1609.34)
                                     {
                                         distancePropInfo.SetValue(item, itemLoc.GetDistanceTo(cityLocation));
                                         list.Add(item);
