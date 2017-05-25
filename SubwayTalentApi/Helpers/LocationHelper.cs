@@ -72,7 +72,7 @@ namespace SubwayTalentApi.Helpers
                                 //it's using the CurrentLocation passed from the web service
                                 //if currentlocation with regards to event is less than the radius.
                                 var currentLoc = LocationHelper.IsValidLocation(searchModel.CurrentLocation.Latitude, searchModel.CurrentLocation.Longitude);
-                                if (itemLoc.GetDistanceTo(currentLoc) <= searchModel.DistanceInMeters)
+                                if (itemLoc.GetDistanceTo(currentLoc) <= searchModel.DistanceInMeters * 1609.34)
                                 {
                                     distancePropInfo.SetValue(item, itemLoc.GetDistanceTo(currentLoc));
                                     list.Add(item);
