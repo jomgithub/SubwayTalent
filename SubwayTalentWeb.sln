@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubwayTalent.SendGridProvid
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubwayTalent.DefaultEmailProvider", "SubwayTalent.DefaultEmailProvider\SubwayTalent.DefaultEmailProvider.csproj", "{E576D0D3-16D4-42DA-A0BD-98A088D1C87D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubwayTalent.PaymentJob", "SubwayTalent.PaymentJob\SubwayTalent.PaymentJob.csproj", "{AFC5877E-5EDD-4EDE-B9FB-5B13B4EC5334}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{E576D0D3-16D4-42DA-A0BD-98A088D1C87D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E576D0D3-16D4-42DA-A0BD-98A088D1C87D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E576D0D3-16D4-42DA-A0BD-98A088D1C87D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AFC5877E-5EDD-4EDE-B9FB-5B13B4EC5334}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AFC5877E-5EDD-4EDE-B9FB-5B13B4EC5334}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AFC5877E-5EDD-4EDE-B9FB-5B13B4EC5334}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AFC5877E-5EDD-4EDE-B9FB-5B13B4EC5334}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

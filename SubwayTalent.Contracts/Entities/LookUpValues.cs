@@ -26,4 +26,11 @@ namespace SubwayTalent.Contracts
         public string Latitude{ get; set; }
         public string Longitude { get; set; }
     }
+
+    public class EmailContent
+    {
+        public int Id { get; set; }
+        public string DocumentName { get; set; }
+        public string Content { get; set; }       
+    }
 }

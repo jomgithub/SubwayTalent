@@ -63,7 +63,8 @@ namespace SubwayTalentApi.Helpers
                                {
                                    return new LookUpValues
                                    {
-                                       Id = genre.Id
+                                       Id = genre.Id,
+                                       Name = genre.Name 
                                    };
                                })),
                 PreferredSkills = (eventModel.PreferredSkills == null) ? null : new List<LookUpValues>(
@@ -71,7 +72,8 @@ namespace SubwayTalentApi.Helpers
                                {
                                    return new LookUpValues
                                    {
-                                       Id = skill.Id
+                                       Id = skill.Id,
+                                       Name = skill.Name 
                                    };
                                }))
             };
@@ -93,7 +95,8 @@ namespace SubwayTalentApi.Helpers
                         {
                             return new LookUpValues
                             {
-                                Id = skill.Id
+                                Id = skill.Id,
+                                Name = skill.Name
                             };
                         }));
                         continue;
@@ -105,7 +108,8 @@ namespace SubwayTalentApi.Helpers
                         {
                             return new LookUpValues
                             {
-                                Id = genre.Id
+                                Id = genre.Id,
+                                Name = genre.Name
                             };
                         }));
                         continue;
@@ -139,7 +143,8 @@ namespace SubwayTalentApi.Helpers
                         {
                             return new Skills
                             {
-                                Id = skill.Id
+                                Id = skill.Id,
+                                Name = skill.Name
                             };
                         }));
                         continue;
@@ -151,7 +156,8 @@ namespace SubwayTalentApi.Helpers
                         {
                             return new Genre
                             {
-                                Id = genre.Id
+                                Id = genre.Id,
+                                Name = genre.Name
                             };
                         }));
                         continue;

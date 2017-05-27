@@ -456,6 +456,22 @@ CREATE TABLE IF NOT EXISTS `subwaytalent-dev`.`user_tokens` (
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8;
 
+
+--
+-- Table structure for table `document_template`
+--
+
+DROP TABLE IF EXISTS `document_template`;
+
+CREATE TABLE `document_template` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `docu_name` varchar(125) NOT NULL,
+  `content` text,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8;
+
+
+
 USE `subwaytalent-dev` ;
 
 -- -----------------------------------------------------
@@ -2569,6 +2585,28 @@ BEGIN
 END$$
 
 DELIMITER ;
+
+-- -----------------------------------------------------
+-- procedure spSubway_GetEmailContents
+-- -----------------------------------------------------
+USE `subwaytalent-dev`;
+DROP procedure IF EXISTS `spSubway_GetEmailContents`;
+
+DELIMITER $$
+USE `subwaytalent-dev`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `spSubway_GetEmailContents`(
+	documentName	varchar(125)
+)
+BEGIN
+
+	select * from document_template
+    where docu_name = documentName;
+
+END$$
+
+DELIMITER ;
+
+
 
 -- -----------------------------------------------------
 -- procedure spSubway_RatePlannerToEvent

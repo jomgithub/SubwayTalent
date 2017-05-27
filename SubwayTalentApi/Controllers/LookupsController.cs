@@ -1,4 +1,5 @@
-﻿using SubwayTalentApi.ActionFilters;
+﻿using SubwayTalent.Core.Exceptions;
+using SubwayTalentApi.ActionFilters;
 using SubwayTalentApi.Models;
 using System;
 using System.Collections.Generic;
@@ -129,6 +130,36 @@ namespace SubwayTalentApi.Controllers
                 Status = Status.Success,
                 Data = methods,
                 RecordCount = (methods == null) ? 0 : methods.Count
+            });
+        }
+
+        [HttpGet]
+        public IHttpActionResult GetPrivacyContent()
+        {
+            var content = SubwayContext.Current.LookUpValuesRepo.GetContent("PRIVACY_CONTENT");
+            
+            if (content == null)
+                throw new SubwayTalentException("Exception Email : PRIVACY_CONTENT is missing.");
+
+            return Ok(new ResponseModel
+            {
+                Status = Status.Success,
+                Data = content.Content 
+            });
+        }
+
+        [HttpGet]
+        public IHttpActionResult GetTOCContent()
+        {
+            var content = SubwayContext.Current.LookUpValuesRepo.GetContent("TERMS_CONTENT");
+            
+            if (content == null)
+                throw new SubwayTalentException("Exception Email : TERMS_CONTENT is missing.");
+
+            return Ok(new ResponseModel
+            {
+                Status = Status.Success,
+                Data = content.Content
             });
         }
     }

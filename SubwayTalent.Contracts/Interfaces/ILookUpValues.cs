@@ -34,5 +34,7 @@ namespace SubwayTalent.Contracts.Interfaces
         IList<States> GetAllStates();
         IList<City> GetCityByStateId(string stateId);
         IList<City> GetCityInfoByCityStateId(string cityStateIds);
+
+        EmailContent GetContent(string documentName);
     }
 }

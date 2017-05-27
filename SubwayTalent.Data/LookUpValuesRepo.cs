@@ -156,5 +156,39 @@ namespace SubwayTalent.Data
 
             return cityList;
         }
+
+
+        public EmailContent GetContent(string documentName)
+        {
+
+            var emailContent = new EmailContent();
+
+            using (var conn = new MySqlConnection(connectionStr))
+            {
+                using (MySqlCommand cmd = new MySqlCommand(schema + ".spSubway_GetEmailContents", conn))
+                {
+                    if (cmd.Connection.State == ConnectionState.Closed)
+                        cmd.Connection.Open();
+
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add(new MySqlParameter("documentName", documentName));
+
+                    MySqlDataReader dr = cmd.ExecuteReader(CommandBehavior.CloseConnection);
+
+                    while (dr.Read())
+                    {
+                        emailContent = new EmailContent
+                        {
+                            Id = Convert.ToInt32(dr["id"]),
+                            DocumentName = Convert.ToString(dr["docu_name"]),
+                            Content = Convert.ToString(dr["content"])
+                        };
+                    }
+                    dr.Close();
+                }
+            }
+
+            return emailContent;
+        }
     }
 }
