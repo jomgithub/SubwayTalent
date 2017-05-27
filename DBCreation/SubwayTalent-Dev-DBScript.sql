@@ -76,18 +76,20 @@ DEFAULT CHARACTER SET = utf8;
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `subwaytalent-dev`.`event_planner` ;
 
-CREATE TABLE IF NOT EXISTS `subwaytalent-dev`.`event_planner` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `event_id` INT(11) NULL DEFAULT NULL,
-  `user_id` VARCHAR(30) NULL DEFAULT NULL,
-  `planner_payment_id` INT(11) NULL DEFAULT NULL,
-  `payment_status` TINYINT(4) NULL DEFAULT '0' COMMENT '0-pending, 1-paid, 2-exception',
-  `payment_date_update` DATETIME NULL DEFAULT NULL,
-  `transaction_auth_id` VARCHAR(200) NULL DEFAULT NULL,
-  `transaction_id_completed` VARCHAR(200) NULL DEFAULT NULL,
-  PRIMARY KEY (`id`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8;
+CREATE TABLE `event_planner` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `event_id` int(11) DEFAULT NULL,
+  `user_id` varchar(30) DEFAULT NULL,
+  `planner_payment_id` int(11) DEFAULT NULL,
+  `payment_status` tinyint(4) DEFAULT '0' COMMENT '0-pending, 1-paid, 2-exception',
+  `payment_date_update` datetime DEFAULT NULL,
+  `transaction_auth_id` varchar(200) DEFAULT NULL,
+  `transaction_id_completed` varchar(200) DEFAULT NULL,
+  `admin_percentage` varchar(45) DEFAULT NULL,
+  `payment_total` varchar(10) DEFAULT '0',
+  `admin_pay_total` varchar(10) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
 
 
 -- -----------------------------------------------------
@@ -2594,7 +2596,7 @@ DROP procedure IF EXISTS `spSubway_GetEmailContents`;
 
 DELIMITER $$
 USE `subwaytalent-dev`$$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `spSubway_GetEmailContents`(
+CREATE PROCEDURE `spSubway_GetEmailContents`(
 	documentName	varchar(125)
 )
 BEGIN
